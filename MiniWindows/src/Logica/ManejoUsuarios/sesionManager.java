@@ -15,9 +15,8 @@ import javax.swing.JPasswordField;
 public class sesionManager {
     
     //Metodo para inicio de sesion
-    public boolean LogIn (String username, String password, JPasswordField passwordfield){
-        char[] tempPass = passwordfield.getPassword();
-        String passwordString = new String(tempPass);
+    public static boolean LogIn (String username, String password, JPasswordField passwordfield){
+        
         ArrayList<User> usuarios = UsuariosControlador.getInstance().getUsuarios();
         
         for(int i=0; i<usuarios.size(); i++){
@@ -45,7 +44,7 @@ public class sesionManager {
     }
     
     
-    public boolean passwordCheck(JPasswordField passwordfield){
+    public static boolean passwordCheck(JPasswordField passwordfield){
         //Verificadores 
         boolean ver1=false;//length
         boolean ver3=false;//charsespeciales
@@ -129,7 +128,7 @@ public class sesionManager {
     
     
     
-    public boolean userCheck(String username, int index){
+    public static boolean userCheck(String username, int index){
         if(index>UsuariosControlador.getInstance().getUsuarios().size()){
            return true;
        }

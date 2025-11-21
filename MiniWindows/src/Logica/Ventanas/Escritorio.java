@@ -19,7 +19,8 @@ public class Escritorio {
         screen.setLocationRelativeTo(null);
         screen.setLayout(null);
         
-        
+        genFondos panelFondo = new genFondos("src\\recursos\\wallpapers\\Background1.png");
+        screen.setContentPane(panelFondo);
         
         
         
