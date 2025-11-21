@@ -12,10 +12,12 @@ public class UserUtilities {
       private String name;
     private String password;
     private String typ;
+    private boolean status;
     
     public UserUtilities(String name, String password){
         this.name=name;
         this.password=password;
+        status=true;
     }
     
     
@@ -44,6 +46,10 @@ public class UserUtilities {
     
     public String typ(){
         return typ;
+    }
+    
+    public boolean getStatus(){
+        return status;
     }
     
 }

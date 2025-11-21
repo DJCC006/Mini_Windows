@@ -4,17 +4,14 @@
  */
 package Logica.Ventanas;
 
-import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
 
 /**
  *
  * @author David
  */
-public class LogInWindow {
-     public LogInWindow(){
+public class Escritorio {
+    public Escritorio(){
         JFrame screen = new JFrame();
         screen.setSize(1920,1200);  //Tamaño standard para menus
         screen.setResizable(false);
@@ -22,22 +19,18 @@ public class LogInWindow {
         screen.setLocationRelativeTo(null);
         screen.setLayout(null);
         
-        JTextField nameField = new JTextField();
-        nameField.setBounds(600, 450, 350, 30);
-        JPasswordField psswordfield = new JPasswordField(100);
-        psswordfield.setBounds(600, 500, 350, 30);
-        JButton logIn = new JButton("Iniciar Sesion");
-        logIn.setBounds(680, 550, 200, 40);
         
-        screen.add(nameField);
-        screen.add(logIn);
-        screen.add(psswordfield);
+        
+        
+        
+        
+        
+        
         screen.setVisible(true);
     }
     
     
     public static void main(String[] args) {
-        LogInWindow ventana = new LogInWindow();
+        Escritorio ventana = new Escritorio();
     }
-    
 }
