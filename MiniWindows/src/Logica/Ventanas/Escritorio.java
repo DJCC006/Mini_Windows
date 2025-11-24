@@ -13,6 +13,8 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -67,8 +69,15 @@ public class Escritorio {
         leftPanel.setOpaque(false);
         taskBarPanel.add(leftPanel,BorderLayout.WEST);
         
-        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        //JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.X_AXIS));
         centerPanel.setOpaque(false);
+        centerPanel.add(Box.createHorizontalGlue());
+        
+        
+        
+        
         taskBarPanel.add(centerPanel, BorderLayout.CENTER);
         
         
@@ -78,27 +87,92 @@ public class Escritorio {
         
         
         //Agregado de botones
-        
-        
-        
-        final int ICON_SIZE=45;
+        final int ICON_SIZE=40;
         ImageIcon menuIcon = new ImageIcon("src\\recursos\\iconos\\menuBt.png");
         Image originalImage = menuIcon.getImage();
         Image scalatedImage = originalImage.getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
         ImageIcon scaledImage = new ImageIcon(scalatedImage);
         
+        ImageIcon filesIcon = scaleImage("src\\recursos\\iconos\\filesIcon.png", ICON_SIZE);
+        ImageIcon cmdIcon = scaleImage("src\\recursos\\iconos\\cmdIcon.png", ICON_SIZE);
+        ImageIcon txtIcon = scaleImage("src\\recursos\\iconos\\txtIcon.png", ICON_SIZE);
+        ImageIcon imagesIcon = scaleImage("src\\recursos\\iconos\\imagenesIcon.png", ICON_SIZE);
+        ImageIcon musicIcon = scaleImage("src\\recursos\\iconos\\musicIcon.png", ICON_SIZE);
+        ImageIcon instaIcon = scaleImage("src\\recursos\\iconos\\instaIcon.png", ICON_SIZE);
+        
+        
+        
+        
         JButton menuButton = new JButton(scaledImage);
         menuButton.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
         menuButton.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
         
-        
         menuButton.setOpaque(false);
         menuButton.setContentAreaFilled(false);
         menuButton.setBorderPainted(false);
-        //menuButton.setBackground(Color.WHITE);
-        //menuButton.setPreferredSize(new Dimension(45,45));
-       // menuButton.setIcon(menuIcon);
         leftPanel.add(menuButton);
+        
+        
+        
+        JButton filesBt = new JButton(filesIcon);
+        filesBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        filesBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        filesBt.setOpaque(false);
+        filesBt.setContentAreaFilled(false);
+        filesBt.setBorderPainted(false);
+        
+        JButton cmdBt = new JButton(cmdIcon);
+        cmdBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        cmdBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        cmdBt.setOpaque(false);
+        cmdBt.setContentAreaFilled(false);
+        cmdBt.setBorderPainted(false);
+        
+        JButton txtBt= new JButton(txtIcon);
+        txtBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        txtBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        txtBt.setOpaque(false);
+        txtBt.setContentAreaFilled(false);
+        txtBt.setBorderPainted(false);
+        
+        JButton imagesBt = new JButton(imagesIcon);
+        imagesBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        imagesBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        imagesBt.setOpaque(false);
+        imagesBt.setContentAreaFilled(false);
+        imagesBt.setBorderPainted(false);
+        
+        JButton musicBt= new JButton(musicIcon);
+        musicBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        musicBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        musicBt.setOpaque(false);
+        musicBt.setContentAreaFilled(false);
+        musicBt.setBorderPainted(false);
+        
+        
+        JButton instaBt = new JButton(instaIcon);
+        instaBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        instaBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        instaBt.setOpaque(false);
+        instaBt.setContentAreaFilled(false);
+        instaBt.setBorderPainted(false);
+        
+        Dimension spacer = new Dimension(10,0);
+        centerPanel.add(filesBt);
+        centerPanel.add(Box.createRigidArea(spacer));
+        centerPanel.add(txtBt);
+        centerPanel.add(Box.createRigidArea(spacer));
+        centerPanel.add(imagesBt);
+        centerPanel.add(Box.createRigidArea(spacer));
+        centerPanel.add(cmdBt);
+        centerPanel.add(Box.createRigidArea(spacer));
+        centerPanel.add(musicBt);
+        centerPanel.add(Box.createRigidArea(spacer));
+        centerPanel.add(instaBt);
+        
+        centerPanel.add(Box.createHorizontalGlue());
+        
+                
         
         
         
@@ -112,4 +186,14 @@ public class Escritorio {
     public static void main(String[] args) {
         Escritorio ventana = new Escritorio();
     }
+    
+    
+    private ImageIcon scaleImage(String rutaImagen, int ICON_SIZE){
+        ImageIcon menuIcon = new ImageIcon(rutaImagen);
+        Image originalImage = menuIcon.getImage();
+        Image scalatedImage = originalImage.getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
+        return new ImageIcon(scalatedImage);
+    }
+    
+    
 }
