@@ -4,11 +4,19 @@
  */
 package Logica.Ventanas;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 /**
  *
@@ -26,35 +34,77 @@ public class Escritorio {
         gd.setFullScreenWindow(screen);
         
         genFondos panelFondo = new genFondos("src\\recursos\\wallpapers\\Background1.png");
-        screen.setContentPane(panelFondo);
+        //screen.setContentPane(panelFondo);
         screen.setTitle("ESCRITORIO");
         //screen.setSize(1920,1200);  //Tamaño standard para menus
         screen.setResizable(false);
         screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //screen.setLocationRelativeTo(null);
-        screen.setLayout(null);
-        
-        screen.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowGainedFocus(WindowEvent e) {
-                // Cuando la ventana obtiene el foco (es decir, el usuario la selecciona)
-                screen.revalidate();
-                screen.repaint();
-            }
-        });
+        screen.setLayout(new BorderLayout());
         
         
+//        screen.addWindowListener(new WindowAdapter() {
+//            @Override
+//            public void windowGainedFocus(WindowEvent e) {
+//                // Cuando la ventana obtiene el foco (es decir, el usuario la selecciona)
+//                screen.revalidate();
+//                screen.repaint();
+//            }
+//        });
+        
+
+        //Creacion de panel para barra de tareas
+        JPanel taskBarPanel = new JPanel();
+        taskBarPanel.setBackground(Color.DARK_GRAY);
+        taskBarPanel.setPreferredSize(new Dimension(screen.getWidth(),50));
+        taskBarPanel.setLayout(new BorderLayout());
         
         
-   
-       
+
+        
+        //Creacion de componentes de taskbar
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT,5,0));
+        leftPanel.setOpaque(false);
+        taskBarPanel.add(leftPanel,BorderLayout.WEST);
+        
+        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        centerPanel.setOpaque(false);
+        taskBarPanel.add(centerPanel, BorderLayout.CENTER);
+        
+        
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT,5,0));
+        rightPanel.setOpaque(false);
+        taskBarPanel.add(rightPanel,BorderLayout.EAST);
+        
+        
+        //Agregado de botones
+        
+        
+        
+        final int ICON_SIZE=45;
+        ImageIcon menuIcon = new ImageIcon("src\\recursos\\iconos\\menuBt.png");
+        Image originalImage = menuIcon.getImage();
+        Image scalatedImage = originalImage.getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
+        ImageIcon scaledImage = new ImageIcon(scalatedImage);
+        
+        JButton menuButton = new JButton(scaledImage);
+        menuButton.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        menuButton.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        
+        
+        menuButton.setOpaque(false);
+        menuButton.setContentAreaFilled(false);
+        menuButton.setBorderPainted(false);
+        //menuButton.setBackground(Color.WHITE);
+        //menuButton.setPreferredSize(new Dimension(45,45));
+       // menuButton.setIcon(menuIcon);
+        leftPanel.add(menuButton);
         
         
         
         
-        
-        
-        
+        screen.add(taskBarPanel, BorderLayout.SOUTH);
+        screen.add(panelFondo, BorderLayout.CENTER);
         screen.setVisible(true);
     }
     
