@@ -4,6 +4,10 @@
  */
 package Logica.Ventanas;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 
 /**
@@ -12,15 +16,39 @@ import javax.swing.JFrame;
  */
 public class Escritorio {
     public Escritorio(){
+        
         JFrame screen = new JFrame();
-        screen.setSize(1920,1200);  //Tamaño standard para menus
-        screen.setResizable(false);
-        screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        screen.setLocationRelativeTo(null);
-        screen.setLayout(null);
+        
+        
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice gd =ge.getDefaultScreenDevice();
+        screen.setUndecorated(true);//limpieza inicial
+        gd.setFullScreenWindow(screen);
         
         genFondos panelFondo = new genFondos("src\\recursos\\wallpapers\\Background1.png");
         screen.setContentPane(panelFondo);
+        screen.setTitle("ESCRITORIO");
+        //screen.setSize(1920,1200);  //Tamaño standard para menus
+        screen.setResizable(false);
+        screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //screen.setLocationRelativeTo(null);
+        screen.setLayout(null);
+        
+        screen.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                // Cuando la ventana obtiene el foco (es decir, el usuario la selecciona)
+                screen.revalidate();
+                screen.repaint();
+            }
+        });
+        
+        
+        
+        
+   
+       
+        
         
         
         

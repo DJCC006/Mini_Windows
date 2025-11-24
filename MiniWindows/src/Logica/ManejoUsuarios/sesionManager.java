@@ -5,6 +5,7 @@
 package Logica.ManejoUsuarios;
 
 import java.util.ArrayList;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 
@@ -15,7 +16,7 @@ import javax.swing.JPasswordField;
 public class sesionManager {
     
     //Metodo para inicio de sesion
-    public static boolean LogIn (String username, String password, JPasswordField passwordfield){
+    public static boolean LogIn (String username, String password, JPasswordField passwordfield, JFrame screen){
         
         ArrayList<User> usuarios = UsuariosControlador.getInstance().getUsuarios();
         
@@ -27,19 +28,23 @@ public class sesionManager {
                   if(user.getName().equals(username)){
                       //check de password
                       if(user.getPassword().equals(password)){
-                          JOptionPane.showMessageDialog(null, "INICIANDO SESION");
+                          //JOptionPane.showMessageDialog(null, "INICIANDO SESION");
                           UserLogged.getInstance().setUserLogged(user);
                           return true;
+                      }else if(password.equalsIgnoreCase("") || password.equalsIgnoreCase(" ")){
+                          JOptionPane.showMessageDialog(screen, "CAMPO DE CONTRASEÑA VACIO");
                       }else{
-                          JOptionPane.showMessageDialog(null, "CONTRASEÑA INCORRECTA");
+                          JOptionPane.showMessageDialog(screen, "CONTRASEÑA INCORRECTA");
                       }
+                  }else{
+                      JOptionPane.showMessageDialog(screen, "USUARIO NO EXISTE");
                   }
               }
             }catch(NullPointerException e){
                 
             }
         }
-        JOptionPane.showMessageDialog(null, "USUARIO NO EXISTE");
+        
         return false;
     }
     
@@ -128,7 +133,7 @@ public class sesionManager {
     
     
     
-    public static boolean userCheck(String username, int index){
+    public static boolean userCheck(String username, int index, JFrame screen){
         if(index>UsuariosControlador.getInstance().getUsuarios().size()){
            return true;
        }
@@ -136,12 +141,12 @@ public class sesionManager {
        User user = UsuariosControlador.getInstance().getUsuarios().get(index);
        
        if(user.getName().equalsIgnoreCase(username)){
-           JOptionPane.showMessageDialog(null, "El nombre de usuario ya existe, por favor utilice uno distinto");
+           JOptionPane.showMessageDialog(screen, "El nombre de usuario ya existe, por favor utilice uno distinto");
            return false;
        }
        
        
-       return userCheck(username, index+1);
+       return userCheck(username, index+1, screen);
     }
     
     

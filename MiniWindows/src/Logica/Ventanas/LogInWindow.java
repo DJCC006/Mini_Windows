@@ -6,10 +6,16 @@ package Logica.Ventanas;
 
 import Logica.ManejoUsuarios.UserLogged;
 import Logica.ManejoUsuarios.sesionManager;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -19,49 +25,70 @@ import javax.swing.JTextField;
  * @author David
  */
 public class LogInWindow  extends sesionManager{
-     public LogInWindow(){
+     
+    private textFMod nameField= new textFMod(20);
+    private passwordFMod psswordfield = new passwordFMod(100);
+    private JFrame screen = new JFrame();
+    
+    public LogInWindow(){
         genFondos panelFondo = new genFondos("src\\recursos\\wallpapers\\Background2.png");
         
-        JFrame screen = new JFrame();
+        
+        //Obtencion de informacion de componentes graficos de pantalla local del usuario
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice gd =ge.getDefaultScreenDevice();
+        screen.setUndecorated(true);//limpieza inicial
+        gd.setFullScreenWindow(screen);
+        
+        
         screen.setContentPane(panelFondo);
-        screen.setSize(1920,1200);  //Tamaño standard para menus
+        screen.setTitle("Pantall Inicio Sesion");
+        //screen.setSize(1920,1200);  //Tamaño standard para menus
         screen.setResizable(false);
         screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        screen.setLocationRelativeTo(null);
+       // screen.setLocationRelativeTo(null);
         screen.setLayout(null);
         
         //Cargar imagen fondo
         
         
-        
-        
-        JTextField nameField = new JTextField();
+        Color colorsemiOpaque = new Color(64,64,64,130);
         nameField.setBounds(600, 450, 350, 30);
-        JPasswordField psswordfield = new JPasswordField(100);
         psswordfield.setBounds(600, 500, 350, 30);
-        JButton logIn = new JButton("Iniciar Sesion");
-        logIn.setBounds(680, 550, 200, 40);
         
-         logIn.addActionListener(new ActionListener(){
-          @Override 
-          public void actionPerformed(ActionEvent e){
-              String username = nameField.getText();
-              
-             char[] tempPass = psswordfield.getPassword();
-             String passwordString = new String(tempPass);
-              
-              
-              if(sesionManager.LogIn(username, passwordString, psswordfield)){
-                  Escritorio ventana = new Escritorio();
-                  screen.dispose();
-              }
-          }
-                    
+        nameField.setBackground(colorsemiOpaque);
+        nameField.setForeground(Color.WHITE);
+
+        psswordfield.setBackground(colorsemiOpaque);
+        psswordfield.setForeground(Color.WHITE);
+        
+        nameField.setText("Username");
+        
+        nameField.addActionListener(e ->{
+            psswordfield.requestFocusInWindow();
         });
         
         
+        psswordfield.addActionListener(e->{
+            ejecutarLogIn();
+        });
+        
+        
+        
+        ImageIcon usuarioIcon = new ImageIcon("src\\recursos\\iconos\\usuario.png");
+        float transparency= 0.9f;
+        
+        labelMod labelUser = new labelMod(usuarioIcon, transparency);
+        labelUser.setBounds(680, 190, 200, 200);
+        
+        JLabel nameUser= new JLabel("ADMIN");
+        nameUser.setFont(new Font("Arial", Font.BOLD, 50));
+        nameUser.setForeground(Color.WHITE);
+        nameUser.setBounds(690, 310, 300, 200);
+        
+        screen.add(nameUser);
+        screen.add(labelUser);
         screen.add(nameField);
-        screen.add(logIn);
         screen.add(psswordfield);
         screen.setVisible(true);
     }
@@ -70,6 +97,22 @@ public class LogInWindow  extends sesionManager{
     public static void main(String[] args) {
         LogInWindow ventana = new LogInWindow();
     }
+    
+    
+    
+    private void ejecutarLogIn(){
+         String username = nameField.getText();
+              
+         char[] tempPass = psswordfield.getPassword();
+         String passwordString = new String(tempPass);
+         
+          if(sesionManager.LogIn(username, passwordString, psswordfield, screen)){
+              screen.dispose();
+              Escritorio ventana = new Escritorio();
+                  
+        }
+    }
+            
     
     
     
