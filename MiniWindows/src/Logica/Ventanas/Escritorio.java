@@ -108,7 +108,16 @@ public class Escritorio {
         
         JPopupMenu menu = new JPopupMenu();
         
-      
+        JMenuItem logoutItem= new JMenuItem("Log Out");
+        logoutItem.addActionListener(e ->{
+            System.out.println("Cerrando sesion");
+            UserLogged.getInstance().setUserLogged(null);
+            screen.dispose();
+            LogInWindow ventana = new LogInWindow();
+            
+        });
+        
+        menu.add(logoutItem);
         
         
         
@@ -123,7 +132,7 @@ public class Escritorio {
              
              int x=0;
              int y=(source.getWidth()-menu.getPreferredSize().width)/2;
-             menu.show(source, x, y);
+             menu.show(source, x, y-20);
           }
                     
         });
