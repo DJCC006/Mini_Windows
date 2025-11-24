@@ -11,6 +11,8 @@ import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.Box;
@@ -18,7 +20,10 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 /**
  *
@@ -100,12 +105,38 @@ public class Escritorio {
         ImageIcon musicIcon = scaleImage("src\\recursos\\iconos\\musicIcon.png", ICON_SIZE);
         ImageIcon instaIcon = scaleImage("src\\recursos\\iconos\\instaIcon.png", ICON_SIZE);
         
+        JPopupMenu menu = new JPopupMenu();
+        
+        JMenuItem logoutItem= new JMenuItem("Log Out");
+        logoutItem.addActionListener(e ->{
+            System.out.println("Cerrando sesion");
+            screen.dispose();
+            LogInWindow ventana = new LogInWindow();
+            
+        });
+        
+        menu.add(logoutItem);
         
         
         
         JButton menuButton = new JButton(scaledImage);
         menuButton.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
         menuButton.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        
+        menuButton.addActionListener(new ActionListener(){
+          @Override 
+          public void actionPerformed(ActionEvent e){
+             JButton source = (JButton) e.getSource();
+             
+             int x=0;
+             int y=(source.getWidth()-menu.getPreferredSize().width)/2;
+             menu.show(source, x, y);
+          }
+                    
+        });
+        
+        
+        
         
         menuButton.setOpaque(false);
         menuButton.setContentAreaFilled(false);
