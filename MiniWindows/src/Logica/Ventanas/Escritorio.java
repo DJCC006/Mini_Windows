@@ -4,6 +4,7 @@
  */
 package Logica.Ventanas;
 
+import Logica.ManejoUsuarios.UserLogged;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -107,15 +108,7 @@ public class Escritorio {
         
         JPopupMenu menu = new JPopupMenu();
         
-        JMenuItem logoutItem= new JMenuItem("Log Out");
-        logoutItem.addActionListener(e ->{
-            System.out.println("Cerrando sesion");
-            screen.dispose();
-            LogInWindow ventana = new LogInWindow();
-            
-        });
-        
-        menu.add(logoutItem);
+      
         
         
         
