@@ -7,6 +7,7 @@ package Ejecutables;
 import Logica.ManejoUsuarios.User;
 import Logica.ManejoUsuarios.UsuariosControlador;
 import Logica.Ventanas.LogInWindow;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -16,6 +17,13 @@ import java.util.ArrayList;
 public class PowerOn {
     public static void main(String[] args) {
         User adminUser = new User("ADMIN","ADMIN123");
+        try{
+            adminUser.createInitUserDir();
+            adminUser.createInicialDirs();
+        }catch(IOException e){
+            System.out.println("ERROR AL CREAR ADMIN");
+        }
+        //Esto es pasable para admin. Este mismo bloque se ejecuta cuando se cree algun otro usuario
         adminUser.setTyp("ADMIN");
         ArrayList<User> usuarios = new ArrayList<>();
         usuarios.add(adminUser);
