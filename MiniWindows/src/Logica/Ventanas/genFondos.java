@@ -7,13 +7,14 @@ package Logica.Ventanas;
 import java.awt.Graphics;
 import java.awt.Image;
 import javax.swing.ImageIcon;
+import javax.swing.JDesktopPane;
 import javax.swing.JPanel;
 
 /**
  *
  * @author David
  */
-public class genFondos extends JPanel{
+public class genFondos extends JDesktopPane{
     private Image imagenFondo;
     
     public genFondos(String rutaImagen){

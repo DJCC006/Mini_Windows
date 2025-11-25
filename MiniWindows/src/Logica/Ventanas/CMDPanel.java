@@ -5,40 +5,51 @@
 package Logica.Ventanas;
 
 import Logica.ManejoUsuarios.UserUtilities;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import javax.swing.*;
+import javax.swing.JInternalFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
 import javax.swing.text.BadLocationException;
 
 /**
  *
- * @author esteb
+ * @author David
  */
-public class CMD extends JFrame {
-
+public class CMDPanel extends JPanel{
+    
     private final JTextArea area;
     private int inicioEntrada = 0;
 
     private ComandosFile manejador;
     private final String rutaBase;
     private UserUtilities usuarioActual = null;
-    private static JFrame screenContainer;
     
-    public CMD(JFrame screenContainer) {
-        super("CMD Insano");
-        this.screenContainer=screenContainer;
-
+    private JInternalFrame parentFrame;
+    
+    
+    public CMDPanel(JInternalFrame parentFrame){
+        //super("CMD Insano");
+        this.parentFrame = parentFrame;
         rutaBase = System.getProperty("user.dir");
         manejador = new ComandosFile(rutaBase);
+        
+        this.setLayout(new BorderLayout());
 
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(1100, 650);
-        setLocationRelativeTo(null);
+        //setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        //setSize(1100, 650);
+        //setLocationRelativeTo(null);
 
         area = new JTextArea();
         area.setEditable(true);
@@ -50,8 +61,12 @@ public class CMD extends JFrame {
         area.setWrapStyleWord(true);
 
         JScrollPane scroll = new JScrollPane(area);
-        add(scroll);
+        
+        //add(scroll);
 
+        this.add(scroll,BorderLayout.CENTER);
+        //this.add(area, BorderLayout.SOUTH);
+        
         appendText("Microsoft Windows [Versión 10.0.22621.521]\n");
         appendText("(c) Microsoft Corporation. Todos los derechos reservados.\n");
         appendText("Si ocupas ayuda usa el comando 'help'.\n");
@@ -98,8 +113,8 @@ public class CMD extends JFrame {
 
         setVisible(true);
     }
-
-    private void appendText(String s) {
+    
+     private void appendText(String s) {
         area.append(s);
         area.setCaretPosition(area.getDocument().getLength());
     }
@@ -266,7 +281,10 @@ public class CMD extends JFrame {
                     return;
 
                 case "exit":
-                    dispose();
+                    if(parentFrame!=null){
+                        parentFrame.dispose();
+                    }
+                    
                     return;
 
                 //-------------------------------------------------------
@@ -278,10 +296,4 @@ public class CMD extends JFrame {
             appendText("Error: " + ex.getMessage() + "\n");
         }
     }
-    
-    
-    public static void main(String[] args) {
-        CMD tester = new CMD(screenContainer);
-    }
-    
 }

@@ -20,7 +20,9 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -42,25 +44,16 @@ public class Escritorio {
         gd.setFullScreenWindow(screen);
         
         genFondos panelFondo = new genFondos("src\\recursos\\wallpapers\\Background1.png");
-        //screen.setContentPane(panelFondo);
         screen.setTitle("ESCRITORIO");
-        //screen.setSize(1920,1200);  //Tamaño standard para menus
         screen.setResizable(false);
         screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //screen.setLocationRelativeTo(null);
         screen.setLayout(new BorderLayout());
         
         
-//        screen.addWindowListener(new WindowAdapter() {
-//            @Override
-//            public void windowGainedFocus(WindowEvent e) {
-//                // Cuando la ventana obtiene el foco (es decir, el usuario la selecciona)
-//                screen.revalidate();
-//                screen.repaint();
-//            }
-//        });
+//        JDesktopPane desktopPane = new JDesktopPane();
+//        desktopPane.add(panelFondo);
         
-
+        
         //Creacion de panel para barra de tareas
         JPanel taskBarPanel = new JPanel();
         taskBarPanel.setBackground(Color.DARK_GRAY);
@@ -161,6 +154,27 @@ public class Escritorio {
         cmdBt.setContentAreaFilled(false);
         cmdBt.setBorderPainted(false);
         
+        cmdBt.addActionListener(new ActionListener(){
+          @Override 
+          public void actionPerformed(ActionEvent e){
+              
+              //CMD newCmd = new CMD(screen);
+              
+             JInternalFrame newCmd = createCMDWindow();
+             panelFondo.add(newCmd);
+             try{
+                 newCmd.setSelected(true);
+             }catch(java.beans.PropertyVetoException ex){
+                 
+             }
+          }
+                    
+        });
+        
+        
+        
+        
+        
         JButton txtBt= new JButton(txtIcon);
         txtBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
         txtBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
@@ -226,6 +240,19 @@ public class Escritorio {
         Image originalImage = menuIcon.getImage();
         Image scalatedImage = originalImage.getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
         return new ImageIcon(scalatedImage);
+    }
+    
+    
+    private JInternalFrame createCMDWindow(){
+        JInternalFrame cmdFrame = new JInternalFrame("CMD INSANO", true, true, true, true);
+        CMDPanel cmdContent = new CMDPanel(cmdFrame);
+        cmdFrame.add(cmdContent, BorderLayout.CENTER);
+        
+        cmdFrame.setSize(1100, 650);
+        cmdFrame.setLocation(50,50);
+        cmdFrame.setVisible(true);
+        
+        return cmdFrame;
     }
     
     
