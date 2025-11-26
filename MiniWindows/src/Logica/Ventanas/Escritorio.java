@@ -196,6 +196,24 @@ public class Escritorio {
         musicBt.setContentAreaFilled(false);
         musicBt.setBorderPainted(false);
         
+        musicBt.addActionListener(new ActionListener(){
+          @Override 
+          public void actionPerformed(ActionEvent e){
+              
+             JInternalFrame newmusic= createMusicWindow();
+             panelFondo.add(newmusic);
+             try{
+                 newmusic.setSelected(true);
+             }catch(java.beans.PropertyVetoException ex){
+                 
+             }
+          }
+                    
+        });
+        
+        
+        
+        
         
         JButton instaBt = new JButton(instaIcon);
         instaBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
@@ -253,6 +271,19 @@ public class Escritorio {
         cmdFrame.setVisible(true);
         
         return cmdFrame;
+    }
+    
+    
+    
+    private JInternalFrame createMusicWindow(){
+        JInternalFrame musicFrame = new JInternalFrame("MUSIC INSANO", true, true, true, true);
+        audioPlayer musicPanel = new audioPlayer();
+        musicFrame.add(musicPanel, BorderLayout.CENTER);
+        
+        musicFrame.setSize(650,450);
+        musicFrame.setLocation(100, 100);
+        musicFrame.setVisible(true);
+        return musicFrame;
     }
     
     
