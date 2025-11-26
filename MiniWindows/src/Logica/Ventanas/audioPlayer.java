@@ -42,7 +42,7 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
         this.player= new audioLogic(this);
         this.modeloLista = new DefaultListModel<>();
         this.cancionesList = new JList<>(modeloLista);
-        this.progressSlider = new JSlider(0,100,0);
+        this.progressSlider = new JSlider(0,100,0); //check after this
         this.timeLabel= new JLabel("00:00 / 00:00", SwingConstants.CENTER);
         
         setupSongListPanel();
@@ -151,7 +151,7 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER,20,5));
         
         playPauseButton = new JButton("PLAY");
-        JButton stopButton = new JButton("STOP");
+        JButton stopButton = new JButton("REPLAY");
         
         
         playPauseButton.addActionListener(e -> togglePlayback());
@@ -235,14 +235,15 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
             int totalSeconds = (int) (total/1000);
             
             
-            
             if(progressSlider.getMaximum()!= totalSeconds){
-                progressSlider.setValue(totalSeconds);
+                progressSlider.setMaximum(totalSeconds);
             }
+            
             
             if(!progressSlider.getValueIsAdjusting()){
                 progressSlider.setValue(currentSeconds);
             }
+
             
             String currentTime = formatTime(currentSeconds);
             String totalTime = formatTime(totalSeconds);
@@ -257,7 +258,7 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
     public void onPlaybackFinished() {
         playPauseButton.setText("PLAY");
         progressSlider.setValue(0);
-        timeLabel.setText("00:00 / "+formatTime((int) (player.getTotalDuration())));
+        timeLabel.setText("00:00 / "+formatTime((int) (player.getTotalDuration()/1000))); //Check this
     }
     
     

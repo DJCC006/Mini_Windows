@@ -61,7 +61,7 @@ public class audioLogic {
             AudioFormat format = audioStream.getFormat();
             long frames = audioStream.getFrameLength();
             
-            totalDurationMillis = (long) (frames/format.getFrameRate()*100);
+            totalDurationMillis = (long) (frames/format.getFrameRate()*1000);
             
             //obtener el clip y abrirlo
             audioClip= AudioSystem.getClip();
@@ -239,6 +239,12 @@ public class audioLogic {
     private void updateProgress(){
         if(audioClip!= null && audioClip.isRunning()){
             long currentMillis = (long) (audioClip.getMicrosecondPosition()/1000);
+            //(long)
+            
+            if(currentMillis>=totalDurationMillis){
+                //nada por aqui
+            }
+            
             
             listener.updateProgress(currentMillis, totalDurationMillis);
             currentPositionFrame = audioClip.getFramePosition();
