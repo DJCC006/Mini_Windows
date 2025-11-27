@@ -27,30 +27,28 @@ import javax.swing.text.BadLocationException;
  *
  * @author David
  */
-public class CMDPanel extends JPanel{
-    
+public class CMDPanel extends JPanel {
+
     private final JTextArea area;
     private int inicioEntrada = 0;
 
     private ComandosFile manejador;
     private final String rutaBase;
     private UserUtilities usuarioActual = null;
-    
+
     private JInternalFrame parentFrame;
-    
-    
-    public CMDPanel(JInternalFrame parentFrame){
+
+    public CMDPanel(JInternalFrame parentFrame) {
         //super("CMD Insano");
         this.parentFrame = parentFrame;
         rutaBase = System.getProperty("user.dir");
         manejador = new ComandosFile(rutaBase);
-        
+
         this.setLayout(new BorderLayout());
 
         //setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         //setSize(1100, 650);
         //setLocationRelativeTo(null);
-
         area = new JTextArea();
         area.setEditable(true);
         area.setBackground(Color.BLACK);
@@ -61,12 +59,11 @@ public class CMDPanel extends JPanel{
         area.setWrapStyleWord(true);
 
         JScrollPane scroll = new JScrollPane(area);
-        
-        //add(scroll);
 
-        this.add(scroll,BorderLayout.CENTER);
+        //add(scroll);
+        this.add(scroll, BorderLayout.CENTER);
         //this.add(area, BorderLayout.SOUTH);
-        
+
         appendText("Microsoft Windows [Versión 10.0.22621.521]\n");
         appendText("(c) Microsoft Corporation. Todos los derechos reservados.\n");
         appendText("Si ocupas ayuda usa el comando 'help'.\n");
@@ -113,8 +110,8 @@ public class CMDPanel extends JPanel{
 
         setVisible(true);
     }
-    
-     private void appendText(String s) {
+
+    private void appendText(String s) {
         area.append(s);
         area.setCaretPosition(area.getDocument().getLength());
     }
@@ -138,6 +135,21 @@ public class CMDPanel extends JPanel{
 
             switch (cmd) {
 
+                case "help":
+                    appendText("Comandos disponibles:\n");
+                    appendText("  cd <ruta>\n");
+                    appendText("  cd.. | ... | cdback\n");
+                    appendText("  mkdir <nombre>\n");
+                    appendText("  mfile <nombre>\n");
+                    appendText("  rm <nombre>\n");
+                    appendText("  dir [ruta]\n");
+                    appendText("  wr <archivo> <texto>\n");
+                    appendText("  rd <archivo>\n");
+                    appendText("  time\n");
+                    appendText("  date\n");
+                    appendText("  cls\n");
+                    appendText("  exit\n");
+                    break;
                 //-------------------------------------------------------
                 // USERADD (usa UserUtilities sin modificarlo)
                 //-------------------------------------------------------
@@ -281,10 +293,10 @@ public class CMDPanel extends JPanel{
                     return;
 
                 case "exit":
-                    if(parentFrame!=null){
+                    if (parentFrame != null) {
                         parentFrame.dispose();
                     }
-                    
+
                     return;
 
                 //-------------------------------------------------------
