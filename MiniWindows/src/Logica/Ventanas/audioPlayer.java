@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 /**
  *
  * @author David
@@ -101,7 +102,7 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
         
         
         modeloLista.clear();
-        File[] files = musicDir.listFiles((dir,name) -> name.toLowerCase().endsWith(".wav") || name.toLowerCase().endsWith("wav"));
+        File[] files = musicDir.listFiles((dir,name) -> name.toLowerCase().endsWith(".wav") || name.toLowerCase().endsWith("wav") || name.toLowerCase().endsWith(".mp3") || name.toLowerCase().endsWith("mp3") );
         
         if(files!= null){
             for(File file: files){
@@ -123,10 +124,15 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
         if(result == JFileChooser.APPROVE_OPTION){
             File[] selectedFiles = chooser.getSelectedFiles();
             File dirDestino = new File(myMusicFolder);
+            
+            if(!dirDestino.exists()){
+                dirDestino.mkdirs();
+            }
+            
             for(File sourcefile: selectedFiles){
                 
                 
-                if(!sourcefile.getName().toLowerCase().endsWith(".wav")){
+                if(!sourcefile.getName().toLowerCase().endsWith(".wav") && !sourcefile.getName().toLowerCase().endsWith(".mp3") ){
                     continue;
                 }
                 
@@ -151,7 +157,7 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER,20,5));
         
         playPauseButton = new JButton("PLAY");
-        JButton stopButton = new JButton("REPLAY");
+        JButton stopButton = new JButton("STOP");
         
         
         playPauseButton.addActionListener(e -> togglePlayback());
@@ -229,7 +235,8 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
 
     @Override
     public void updateProgress(long current, long total) {
-        
+        System.out.println("Actualizando UI. Tiempo actual (ms): "+current);
+        System.out.println("Total: "+total);
         if(total>0){
             int currentSeconds = (int) (current/1000);
             int totalSeconds = (int) (total/1000);
@@ -239,15 +246,20 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
                 progressSlider.setMaximum(totalSeconds);
             }
             
-            
-            if(!progressSlider.getValueIsAdjusting()){
-                progressSlider.setValue(currentSeconds);
-            }
-
-            
             String currentTime = formatTime(currentSeconds);
             String totalTime = formatTime(totalSeconds);
             timeLabel.setText(currentTime+" / "+totalTime);
+            System.out.println(currentTime+ " / "+totalTime);
+            
+            if(!progressSlider.getValueIsAdjusting()){
+                SwingUtilities.invokeLater(()->{
+                    progressSlider.setValue(currentSeconds);
+                });
+                
+            }
+
+            
+            
         }else{
             progressSlider.setValue(0);
             timeLabel.setText("00:00 / 00:00");

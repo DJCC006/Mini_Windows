@@ -55,10 +55,119 @@ public class audioLogic {
     public void load(File song){
         stop();
         
+        AudioInputStream audioStream =null;
+        AudioInputStream decodedStream=null;
+        
+        
+        try{
+            audioStream= AudioSystem.getAudioInputStream(song);
+            
+            AudioFormat baseFormat = audioStream.getFormat();
+            
+             if(baseFormat.getEncoding() != AudioFormat.Encoding.PCM_SIGNED){
+                AudioFormat decodedFormat = new AudioFormat(
+                        AudioFormat.Encoding.PCM_SIGNED,
+                        baseFormat.getSampleRate(),
+                        16,
+                        baseFormat.getChannels(),
+                        baseFormat.getChannels()*2,
+                        baseFormat.getSampleRate(),
+                        false
+                );
+                
+                decodedStream = AudioSystem.getAudioInputStream(decodedFormat, audioStream);
+            }else{
+                 decodedStream = audioStream;
+             }
+             
+             
+             long frames = audioStream.getFrameLength();
+             AudioFormat format = decodedStream.getFormat();
+             
+             if(frames!= AudioSystem.NOT_SPECIFIED && format.getFrameRate()>0){
+                 totalDurationMillis = (long) (frames/format.getFrameRate()*1000);
+             }else{
+                audioClip = AudioSystem.getClip();
+                audioClip.open(decodedStream);
+                totalDurationMillis= audioClip.getMicrosecondLength()/1000;
+             }   
+            
+          //  totalDurationMillis = (long) (frames/baseFormat.getFrameRate()*1000);
+            
+            //obtener el clip y abrirlo
+            //audioClip= AudioSystem.getClip();
+            //audioClip.open(decodedStream);
+            
+            if(audioClip==null){
+                audioClip= AudioSystem.getClip();
+                audioClip.open(decodedStream);
+            }
+            
+            
+            
+            //anadir el listener para detectar el final de la reproduccion
+            audioClip.addLineListener(event ->{
+                if(event.getType() == LineEvent.Type.STOP && !audioClip.isRunning()){
+                    
+                    //Solo si no estamos pausando y la reproduccion realmente termino
+                    if(audioClip.getFramePosition()>=audioClip.getFrameLength()-1){
+                        progressTimer.stop();
+                        audioClip.setFramePosition(0);
+                        currentPositionFrame=0;
+                        listener.onPlaybackFinished();
+                        System.out.println("Reproduccion finalizada");
+                    }
+                }
+            });
+             
+             
+             
+        }catch(UnsupportedAudioFileException e){
+            System.out.println("No se soporto el formato del archivo");
+            e.printStackTrace();
+            audioClip=null;
+        }catch(LineUnavailableException | IOException e){
+            System.out.println("Error al acceder al hardware de audio");
+            e.printStackTrace();
+            audioClip =null;
+        }finally{
+            try{
+                if(decodedStream!= null && audioStream != decodedStream){
+                    
+                }
+            }catch(Exception e){
+                System.out.println("ERROR DE TIPO LOL");
+            }
+        }
+        currentPositionFrame=0;
+        
+        
+        
+        /*
         try(AudioInputStream audioStream = AudioSystem.getAudioInputStream(song)){
             
             //obtener el formadio de audio y la duracion
+
             AudioFormat format = audioStream.getFormat();
+            
+            if(format.getEncoding() != AudioFormat.Encoding.PCM_SIGNED){
+                AudioFormat decodedFormat = new AudioFormat(
+                        AudioFormat.Encoding.PCM_SIGNED,
+                        format.getSampleRate(),
+                        16,
+                        format.getChannels(),
+                        format.getChannels()*2,
+                        format.getSampleRate(),
+                        false
+                );
+                
+                decodedStream =
+            }
+            
+            
+            
+            
+            
             long frames = audioStream.getFrameLength();
             
             totalDurationMillis = (long) (frames/format.getFrameRate()*1000);
@@ -89,24 +198,9 @@ public class audioLogic {
             audioClip=null;
         }
         currentPositionFrame=0;
+        */
         
-        
-        /*
-        if(player!=null){
-            stop();
-        }
-        
-        this.currentSong= song;
-        this.isPause=false;
-        this.currentPositionMillis=0;
-        
-        try{
-            InputStream is = new BufferedInputStream(new FileInputStream(song));
-            //player = new JLayer(is);
-        }catch(Exception e){
-            
-        }
-*/
+
     }
     
     
@@ -114,6 +208,28 @@ public class audioLogic {
         
         if(audioClip == null) return;
         
+        
+        
+        if(audioClip.isRunning()){
+            audioClip.stop();
+        }
+        
+        
+        audioClip.setFramePosition((int) currentPositionFrame);
+        
+        
+        audioClip.start();
+       
+        
+        
+        if(!progressTimer.isRunning()){
+             progressTimer.start();
+             System.out.println("ENTTRO AL EJECUTAR EL TIMER");
+        }
+        
+        System.out.println("Reproducioendo desde el frame: "+currentPositionFrame);
+        
+        /*
         if(!audioClip.isRunning()){
             audioClip.setFramePosition((int) currentPositionFrame);
             audioClip.start();
@@ -240,6 +356,11 @@ public class audioLogic {
         if(audioClip!= null && audioClip.isRunning()){
             long currentMillis = (long) (audioClip.getMicrosecondPosition()/1000);
             //(long)
+            
+            if(currentMillis<=0){
+                AudioFormat format = audioClip.getFormat();
+                currentMillis= (long) (audioClip.getFramePosition()/format.getFrameRate()*1000);
+            }
             
             if(currentMillis>=totalDurationMillis){
                 //nada por aqui
