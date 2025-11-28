@@ -323,6 +323,7 @@ public class VisorImagenes extends JPanel {
     }
 
     // --- MAIN PARA PRUEBA ---
+    /*
     public static void main(String[] args) {
         // 1. Configurar un usuario de prueba para evitar NullPointerException en ImagenesLogic
         // Esto simula que ya se pasó por la ventana de LogIn.
@@ -345,7 +346,7 @@ public class VisorImagenes extends JPanel {
                 // Opcional: Establecer Look and Feel del sistema para mejor apariencia
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
-                /* Ignorar */
+                /* Ignorar 
             }
 
             JFrame f = new JFrame("Galería");
@@ -363,5 +364,7 @@ public class VisorImagenes extends JPanel {
             System.out.println(testImagesDir.getAbsolutePath());
         });
     }
+    */
+
 
 }

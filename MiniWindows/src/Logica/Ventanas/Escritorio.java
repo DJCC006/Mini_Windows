@@ -189,6 +189,25 @@ public class Escritorio {
         imagesBt.setContentAreaFilled(false);
         imagesBt.setBorderPainted(false);
         
+        imagesBt.addActionListener(new ActionListener(){
+          @Override 
+          public void actionPerformed(ActionEvent e){
+              
+             JInternalFrame newImages= createGalleryWindow();
+             
+             panelFondo.add(newImages);
+             try{
+                 newImages.setSelected(true);
+             }catch(java.beans.PropertyVetoException ex){
+                 //ignore
+             }
+          }
+                    
+        });
+        
+        
+        
+        
         JButton musicBt= new JButton(musicIcon);
         musicBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
         musicBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
@@ -285,6 +304,22 @@ public class Escritorio {
         musicFrame.setVisible(true);
         return musicFrame;
     }
+    
+    
+    
+    private JInternalFrame createGalleryWindow(){
+        JInternalFrame galleryFrame = new JInternalFrame("GALERIA INSANA", true, true, true, true);
+        VisorImagenes galeriapanel = new VisorImagenes();
+        galleryFrame.add(galeriapanel, BorderLayout.CENTER);
+        
+        galleryFrame.setSize(900,600);
+        galleryFrame.setLocation(100, 100);
+        galleryFrame.setVisible(true);
+        return galleryFrame;
+    }
+    
+    
+    
     
     
 }
