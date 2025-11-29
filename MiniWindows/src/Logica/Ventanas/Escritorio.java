@@ -147,6 +147,26 @@ public class Escritorio {
         filesBt.setContentAreaFilled(false);
         filesBt.setBorderPainted(false);
         
+        
+        filesBt.addActionListener(new ActionListener(){
+          @Override 
+          public void actionPerformed(ActionEvent e){
+              
+              //CMD newCmd = new CMD(screen);
+              
+             JInternalFrame newfManager = createFileWindow();
+             panelFondo.add(newfManager);
+             try{
+                 newfManager.setSelected(true);
+             }catch(java.beans.PropertyVetoException ex){
+                 
+             }
+          }
+                    
+        });
+        
+        
+        
         JButton cmdBt = new JButton(cmdIcon);
         cmdBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
         cmdBt.setMaximumSize(new Dimension(ICON_SIZE, ICON_SIZE));
@@ -318,6 +338,17 @@ public class Escritorio {
         return galleryFrame;
     }
     
+    
+    private JInternalFrame createFileWindow(){
+         JInternalFrame fManagerFrame = new JInternalFrame("EXPLORADOR INSANO", true, true, true, true);
+         fileExplorer explorerPanel = new fileExplorer();
+         fManagerFrame.add(explorerPanel, BorderLayout.CENTER);
+         
+         fManagerFrame.setSize(800,600);
+         fManagerFrame.setLocation(50, 50);
+         fManagerFrame.setVisible(true);
+         return fManagerFrame;
+    }
     
     
     
