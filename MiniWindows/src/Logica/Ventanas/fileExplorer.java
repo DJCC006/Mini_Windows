@@ -5,12 +5,16 @@
 package Logica.Ventanas;
 
 import Logica.ManejoUsuarios.UserLogged;
+import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -20,10 +24,13 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.filechooser.FileSystemView;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -39,8 +46,16 @@ public class fileExplorer extends JPanel{
     private JTree fileTree;
     private DefaultTreeModel treeModel;
     private DefaultMutableTreeNode raizNodo;
-    private JList<File> contentList;
-    private DefaultListModel<File> listModel;
+    
+    
+    
+    //private JList<File> contentList;
+    //private DefaultListModel<File> listModel;
+    
+    
+    private JTable fileTable;
+    private FileTableModel tableModel;
+    
     private JLabel pathLabel;
     
     
@@ -59,13 +74,14 @@ public class fileExplorer extends JPanel{
     public fileExplorer(){
         setLayout(new BorderLayout(5,5));
         
-        listModel = new DefaultListModel<>();
-        contentList = new JList<>(listModel);
+        
+        //listModel = new DefaultListModel<>();
+        //contentList = new JList<>(listModel);
         
         setupFileTree();
         
-        setupContentList();
-        
+        //setupContentList();
+        setupContentTable();
         
         //Ordenar
         JPanel panelSort = new JPanel(new BorderLayout());
@@ -79,11 +95,12 @@ public class fileExplorer extends JPanel{
         
         
         //Panel Principal
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(fileTree), new JScrollPane(contentList));
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(fileTree), new JScrollPane(fileTable));
         splitPane.setDividerLocation(200);
         
         pathLabel = new JLabel("Ruta Actual: "+raizUsuario);
         pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
+       // add(pathLabel, BorderLayout.WEST);
         
         add(panelSort, BorderLayout.NORTH);
         //add(pathLabel, BorderLayout.NORTH);
@@ -169,9 +186,7 @@ public class fileExplorer extends JPanel{
                     if(node.getChildCount()==0 || (node.getChildCount() == 1 && node.getFirstChild().toString().equals("Cargando..."))){
                         populateNode(node);
                     }
-                }
-                
-                
+                } 
             }
         });
     }
@@ -195,39 +210,110 @@ public class fileExplorer extends JPanel{
         }
     }
     
-    private void setupContentList(){
-        contentList.setCellRenderer(new FileListRenderer());
-        //content
+    private void setupContentTable(){
+        
+        tableModel = new FileTableModel();
+        fileTable= new JTable(tableModel);
+        
+        
+        fileTable.getColumnModel().getColumn(0).setCellRenderer(new FileNameRender());
+        
+        
+        fileTable.getColumnModel().getColumn(0).setPreferredWidth(250);// columna nombre
+        fileTable.getColumnModel().getColumn(1).setPreferredWidth(150);//columna ultima modif
+        fileTable.getColumnModel().getColumn(2).setPreferredWidth(100);//columann tipo
+        fileTable.getColumnModel().getColumn(3).setPreferredWidth(80);//columna size
+        
+        fileTable.getTableHeader().setReorderingAllowed(false);
+        
+        
+        fileTable.getTableHeader().addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            
+            public void mouseClicked(java.awt.event.MouseEvent e){
+                int col = fileTable.columnAtPoint(e.getPoint());
+                
+                if(col==0) sortCriteria = SortCriteria.NAME;
+                else if(col==1)sortCriteria=SortCriteria.DATE;
+                else if(col ==2) sortCriteria= SortCriteria.TYPE;
+                else if(col==3) sortCriteria = SortCriteria.SIZE;
+                
+                
+                opcionesOrdenar.setSelectedIndex(col);
+                
+                displayContents(new File(currentDirPath));
+            }
+            
+        });
+    }
+    
+    
+    
+    private class FileNameRender extends DefaultTableCellRenderer{
+        private final FileSystemView fsv = FileSystemView.getFileSystemView();
+        
+        
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column){
+            File file= (File) value;
+            
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setIcon(fsv.getSystemIcon(file));
+            setText(fsv.getSystemDisplayName(file));
+            return this;
+        }
     }
     
     
     private void displayContents(File directory){
-         currentDirPath= directory.getAbsolutePath();
-        listModel.clear();
+        currentDirPath= directory.getAbsolutePath();
+        //listModel.clear();
         pathLabel.setText("Ruta Actual: "+ directory.getAbsolutePath());
         
         File[] contents = directory.listFiles();
+        List<File> filesToShow = new ArrayList<>();
         
         if(contents!= null){
-            File[] directories = Arrays.stream(contents).filter(File::isDirectory).toArray(File[]::new);
-            File[] files= Arrays.stream(contents).filter(File::isFile).toArray(File[]::new);
+            
+            List<File> directorios = new ArrayList<>();
+            List<File> files = new ArrayList<>();
+            
+            for(File file:contents){
+                if(file.isDirectory()){
+                    directorios.add(file);
+                }else{
+                    files.add(file);
+                }
+            }
+            
+            
+            
+            //File[] directories = Arrays.stream(contents).filter(File::isDirectory).toArray(File[]::new);
+            //File[] files= Arrays.stream(contents).filter(File::isFile).toArray(File[]::new);
             
             
             Comparator<File> comparator = getFileComparator();
             
             
-            Arrays.sort(directories, comparator);
-            Arrays.sort(files, comparator);
+            directorios.sort(comparator);
+            files.sort(comparator);
+            
+            //Arrays.sort(directories, comparator);
+            //Arrays.sort(files, comparator);
             
             
-            for(File dir: directories){
-                listModel.addElement(dir);
-            }
-            
-            for(File file: files){
-                listModel.addElement(file);
-            }   
+//            for(File dir: directories){
+//                listModel.addElement(dir);
+//            }
+//            
+//            for(File file: files){
+//                listModel.addElement(file);
+//            }   
+
+            filesToShow.addAll(directorios);
+            filesToShow.addAll(files);
         }
+        tableModel.setFiles(filesToShow);
     }
     
     
@@ -256,6 +342,83 @@ public class fileExplorer extends JPanel{
         }
     }
     
+    
+    
+    
+    
+    private class FileTableModel extends AbstractTableModel{
+        private final String[] columnNames = {"Nombre", "Ultima Modificacion", "Tipo", "Tamaño"};
+        private List<File> fileList = new ArrayList<>();
+        private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        private final FileSystemView fsv = FileSystemView.getFileSystemView();
+
+        @Override
+        public int getRowCount() {
+            return fileList.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        @Override 
+        public String getColumnName(int col){
+            return columnNames[col];
+        }
+        
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            File file = fileList.get(rowIndex);
+            
+            
+            switch(columnIndex){
+                case 0:
+                    return file;
+                    
+                case 1:
+                    return dateFormat.format(file.lastModified());
+                    
+                case 2:
+                    if(file.isDirectory()){
+                        return "Carpeta de Archivos";
+                    }
+                    return fsv.getSystemTypeDescription(file);
+                    
+                case 3:
+                    if(file.isDirectory()){
+                        return "";
+                    }
+                    return formatSize(file.length());
+                    
+                default:
+                    return null;
+            }
+        }
+        
+        
+         public void setFiles(List<File> files){
+             this.fileList = files;
+             fireTableDataChanged();
+         }
+         
+         
+         
+         
+         private String formatSize(long size){
+             if(size<=0) return "0 bytes";
+             final String[] units = new String[]{"bytes","KB", "MB", "GB", "TB"};
+             int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+             return String.format("%.1f %s", size/Math.pow(1024, digitGroups),units[digitGroups]);
+         }
+        
+        
+    }
+    
+    
+    
+   
+    
     private class FileTreeRenderer extends DefaultTreeCellRenderer{
         private final FileSystemView fsv = FileSystemView.getFileSystemView();
         
@@ -280,6 +443,35 @@ public class fileExplorer extends JPanel{
     }
     
     
+    /*
+    
+    private class FileTreeRenderer extends DefaultTreeCellRenderer{
+        private final FileSystemView fsv = FileSystemView.getFileSystemView();
+        
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus ){
+            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+            
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+            Object userObject = node.getUserObject();
+            
+            
+            if(userObject instanceof File){
+                File file = (File) userObject;
+                setText(fsv.getSystemDisplayName(file));
+                setIcon(fsv.getSystemIcon(file));
+            }else{
+                setIcon(null);
+            }
+            return this;
+        }
+    }
+    
+    
+    
+    
+    
+    /*
     private class FileListRenderer  extends DefaultListCellRenderer {
         private final FileSystemView fsv= FileSystemView.getFileSystemView();
         
@@ -296,7 +488,7 @@ public class fileExplorer extends JPanel{
             return this;
         }
     }
-    
+    */
     
     
     
