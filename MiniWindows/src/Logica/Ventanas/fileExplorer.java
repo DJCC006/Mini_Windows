@@ -10,6 +10,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,11 +49,6 @@ public class fileExplorer extends JPanel{
     private DefaultMutableTreeNode raizNodo;
     
     
-    
-    //private JList<File> contentList;
-    //private DefaultListModel<File> listModel;
-    
-    
     private JTable fileTable;
     private FileTableModel tableModel;
     
@@ -75,13 +71,19 @@ public class fileExplorer extends JPanel{
         setLayout(new BorderLayout(5,5));
         
         
-        //listModel = new DefaultListModel<>();
-        //contentList = new JList<>(listModel);
         
         setupFileTree();
         
         //setupContentList();
         setupContentTable();
+        
+        
+        JPanel northPanel = new JPanel(new BorderLayout());
+        
+        JToolBar toolBar = setupToolBar();
+        northPanel.add(toolBar, BorderLayout.NORTH);
+        
+        
         
         //Ordenar
         JPanel panelSort = new JPanel(new BorderLayout());
@@ -90,7 +92,7 @@ public class fileExplorer extends JPanel{
         panelSort.add(pathLabel, BorderLayout.WEST);
         
         setupSortControls(panelSort);
-        
+        northPanel.add(panelSort, BorderLayout.CENTER);
         
         
         
@@ -102,8 +104,8 @@ public class fileExplorer extends JPanel{
         pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
        // add(pathLabel, BorderLayout.WEST);
         
-        add(panelSort, BorderLayout.NORTH);
-        //add(pathLabel, BorderLayout.NORTH);
+        //add(panelSort, BorderLayout.NORTH);
+        add(northPanel, BorderLayout.NORTH);
         add(splitPane, BorderLayout.CENTER);
         
         
@@ -118,6 +120,127 @@ public class fileExplorer extends JPanel{
         }
         */
         
+    }
+    
+    
+    
+    
+    private JToolBar setupToolBar(){
+        JToolBar toolBar= new JToolBar();
+        toolBar.setFloatable(false);
+        
+        JButton newFolderButton = new JButton("<html><b>Nueva Carpeta<b></html>", UIManager.getIcon("FileChooser.newFolderIcon"));
+        newFolderButton.setToolTipText("Crear una nueva carpeta en la ubicacion actual");
+        newFolderButton.addActionListener(e ->createNewFolder());
+        toolBar.add(newFolderButton);
+        
+        
+        JButton newFileButton = new JButton("<html><b>Nuevo Archivo</b></html>",UIManager.getIcon("FileChooser.getFolderIcon"));
+        newFileButton.setToolTipText("Crear un nuevo archivo de texto (.txt) en la ubicacion actual");
+        newFileButton.addActionListener(e -> createNewFile());
+        toolBar.add(newFileButton);
+        
+        return toolBar;
+    }
+    
+    
+    private void createNewFolder(){
+        String folderName = JOptionPane.showInputDialog(this, "Ingresa el nombre de la nueva carpeta:",
+                "Crear Carpeta",
+                JOptionPane.PLAIN_MESSAGE);
+        
+        if(folderName!= null && !folderName.trim().isEmpty()){
+            File newFolder = new File(currentDirPath, folderName.trim());
+            
+            if(newFolder.exists()){
+                JOptionPane.showMessageDialog(this,
+                        "La Carpeta ya existe",
+                        "Error de Creacion",
+                        JOptionPane.ERROR_MESSAGE);
+            }else{
+                if(newFolder.mkdir()){
+                    displayContents(new File(currentDirPath));
+                    updateTree(new File(currentDirPath));
+                }else{
+                    JOptionPane.showMessageDialog(this, "Error al crear la carpeta",
+                            "Error de creacion",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+    }
+    
+    
+    
+    private void createNewFile(){
+        String fileName = JOptionPane.showInputDialog(this, 
+                "Ingresa el nombre de nuevo archivo (ej: documento.txt):",
+                JOptionPane.PLAIN_MESSAGE);
+        
+        if(fileName!=null && !fileName.trim().isEmpty()){
+            String finalFileName = fileName.trim();
+            if(!finalFileName.contains(".")){
+                finalFileName+=".txt";
+            }
+            
+             File newFile = new File(currentDirPath, finalFileName);
+             
+             if(newFile.exists()){
+                 JOptionPane.showMessageDialog(this, 
+                         "El archivo ya existe",
+                         "Error de Creacion",
+                         JOptionPane.ERROR_MESSAGE);
+             }else{
+                 try{
+                     if(newFile.createNewFile()){
+                         displayContents(new File(currentDirPath));
+                     }else{
+                         JOptionPane.showMessageDialog(this, 
+                                 "Error al crear el archivo",
+                                 "Error de Creacion",
+                                 JOptionPane.ERROR_MESSAGE);
+                     }
+                 }catch(IOException ex){
+                     JOptionPane.showMessageDialog(this, 
+                             "Error de E/S al crear el archivo: "+ex.getMessage(),
+                             "Error de Creacion",
+                             JOptionPane.ERROR_MESSAGE);
+                 } 
+             }
+        }   
+    }
+    
+    
+    
+    private void updateTree(File parentDir){
+        
+        DefaultMutableTreeNode nodeToUpdate = findNode(raizNodo, parentDir);
+        
+        if(nodeToUpdate!= null){
+            populateNode(nodeToUpdate);
+            treeModel.nodeStructureChanged(nodeToUpdate);
+        } 
+    }
+    
+    
+    //recursiva de apoyo
+    private DefaultMutableTreeNode findNode(DefaultMutableTreeNode startNode, File targetFile){
+        if(startNode.getUserObject().equals(targetFile)){
+            return startNode;
+        }
+        
+        for(int i=0; i< startNode.getChildCount(); i++){
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode)  startNode.getChildAt(i);
+            
+            
+            if(child.getUserObject() instanceof File){
+                DefaultMutableTreeNode found = findNode(child, targetFile);
+                if(found!=null){
+                    return found;
+                }
+            }
+        }
+        return null;
     }
     
     
