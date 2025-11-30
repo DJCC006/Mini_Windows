@@ -7,12 +7,14 @@ package Logica.Ventanas;
 import Logica.ManejoUsuarios.UserLogged;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -42,6 +44,18 @@ public class fileExplorer extends JPanel{
     private JLabel pathLabel;
     
     
+    //elementos para ordenar lo que es los archivos dependiendo del criterio seleccionado
+    private JComboBox<String> opcionesOrdenar;
+    private String currentDirPath;
+    private SortCriteria sortCriteria = SortCriteria.NAME;
+    
+    
+    private enum SortCriteria{
+        NAME, DATE, SIZE, TYPE;
+    }
+    
+    
+    
     public fileExplorer(){
         setLayout(new BorderLayout(5,5));
         
@@ -52,16 +66,33 @@ public class fileExplorer extends JPanel{
         
         setupContentList();
         
+        
+        //Ordenar
+        JPanel panelSort = new JPanel(new BorderLayout());
+        pathLabel = new JLabel("Ruta Actual: "+ raizUsuario);
+        pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
+        panelSort.add(pathLabel, BorderLayout.WEST);
+        
+        setupSortControls(panelSort);
+        
+        
+        
+        
+        //Panel Principal
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(fileTree), new JScrollPane(contentList));
         splitPane.setDividerLocation(200);
         
         pathLabel = new JLabel("Ruta Actual: "+raizUsuario);
         pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
         
-        add(pathLabel, BorderLayout.NORTH);
+        add(panelSort, BorderLayout.NORTH);
+        //add(pathLabel, BorderLayout.NORTH);
         add(splitPane, BorderLayout.CENTER);
         
-        displayContents(new File(raizUsuario));
+        
+        File rootFile = new File(raizUsuario);
+        currentDirPath= raizUsuario;
+        displayContents(rootFile);
         
         /*ESTO EN CASO QUE SE BUGUE
         File raizDir = new File(raizUsuario);
@@ -69,7 +100,43 @@ public class fileExplorer extends JPanel{
             raizDir.mkdirs()
         }
         */
+        
     }
+    
+    
+    
+    private void setupSortControls(JPanel panelCambios){
+        JPanel sortPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10 ,0));
+        opcionesOrdenar = new JComboBox<>(new String[]{"Nombre", "Fecha", "Tamaño", "Tipo"});
+        opcionesOrdenar.setSelectedItem("Nombre");
+        
+        
+        
+        sortPanel.add(new JLabel("Ordenar por:"));
+        sortPanel.add(opcionesOrdenar);
+        
+        
+        opcionesOrdenar.addActionListener(e ->{
+            String selected =  (String) opcionesOrdenar.getSelectedItem();
+            
+            if("Nombre".equals(selected)){
+                sortCriteria= SortCriteria.NAME;
+            }else if("Fecha".equals(selected)){
+                sortCriteria = SortCriteria.DATE;
+            }else if("Tamaño".equals(selected)){
+                sortCriteria = SortCriteria.SIZE;
+            }else if("Tipo".equals(selected)){
+                sortCriteria = SortCriteria.SIZE;
+            }
+            
+            displayContents(new File(currentDirPath)); //posiblemente el curretnDirPath no se actualiza
+        });
+        
+        
+        panelCambios.add(sortPanel, BorderLayout.EAST);
+        
+    }
+            
     
     
     private void setupFileTree(){
@@ -88,7 +155,12 @@ public class fileExplorer extends JPanel{
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) fileTree.getLastSelectedPathComponent();
                 if(node==null) return;
                 
-                File file = (File) node.getUserObject();
+                
+                
+                Object userObject = node.getUserObject();
+                if(!(userObject instanceof File)) return;
+                
+                File file = (File) userObject;
                 
                 
                 if(file.isDirectory()){
@@ -130,6 +202,7 @@ public class fileExplorer extends JPanel{
     
     
     private void displayContents(File directory){
+         currentDirPath= directory.getAbsolutePath();
         listModel.clear();
         pathLabel.setText("Ruta Actual: "+ directory.getAbsolutePath());
         
@@ -139,8 +212,12 @@ public class fileExplorer extends JPanel{
             File[] directories = Arrays.stream(contents).filter(File::isDirectory).toArray(File[]::new);
             File[] files= Arrays.stream(contents).filter(File::isFile).toArray(File[]::new);
             
-            Arrays.sort(directories, Comparator.comparing(File::getName));
-            Arrays.sort(files, Comparator.comparing(File:: getName));
+            
+            Comparator<File> comparator = getFileComparator();
+            
+            
+            Arrays.sort(directories, comparator);
+            Arrays.sort(files, comparator);
             
             
             for(File dir: directories){
@@ -154,6 +231,30 @@ public class fileExplorer extends JPanel{
     }
     
     
+    
+    
+    private Comparator<File> getFileComparator(){
+        switch(sortCriteria){
+            
+            case DATE:
+                return Comparator.comparingLong(File::lastModified).reversed();
+                
+            case SIZE:
+                return Comparator.comparingLong(File::length).reversed();
+                
+            case TYPE:
+                return Comparator.comparing(f ->{
+                   if(f.isDirectory()) return "Directory";
+                   String name =f.getName();
+                   int lastDot = name.lastIndexOf('.');
+                   return (lastDot==-1) ? "" : name.substring(lastDot+1);
+                });
+            
+            case NAME:
+                default:
+                return Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER);
+        }
+    }
     
     private class FileTreeRenderer extends DefaultTreeCellRenderer{
         private final FileSystemView fsv = FileSystemView.getFileSystemView();
