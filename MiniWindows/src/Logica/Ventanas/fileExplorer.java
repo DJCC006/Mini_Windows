@@ -11,11 +11,15 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -43,6 +47,10 @@ import javax.swing.tree.DefaultTreeModel;
 public class fileExplorer extends JPanel{
     private static String userName=UserLogged.getInstance().getUserLogged().getName();
     private static final String raizUsuario = "src\\Z\\Usuarios\\"+userName+"\\";
+    private static final String recycleBin = raizUsuario+"Papelera";
+    
+    
+    
     
     private JTree fileTree;
     private DefaultTreeModel treeModel;
@@ -66,15 +74,21 @@ public class fileExplorer extends JPanel{
     }
     
     
+    //cosas para portapapeles
+    private List<File> clipboardFiles= new ArrayList<>();
+    private boolean isCutOperation =false;
+    
+    
+    
     
     public fileExplorer(){
         setLayout(new BorderLayout(5,5));
         
         
         
-        setupFileTree();
+        File papelera = new File(recycleBin);
         
-        //setupContentList();
+        setupFileTree();
         setupContentTable();
         
         
@@ -139,6 +153,24 @@ public class fileExplorer extends JPanel{
         newFileButton.setToolTipText("Crear un nuevo archivo de texto (.txt) en la ubicacion actual");
         newFileButton.addActionListener(e -> createNewFile());
         toolBar.add(newFileButton);
+        
+        //Creacion de opciones de portapapeles
+        JButton copiarBt= new JButton("Copiar", UIManager.getIcon("Table.copyIcon"));
+        copiarBt.setToolTipText("Copia el archivo o carpeta seleccionada");
+        copiarBt.addActionListener(e -> copySelectedFiles(false));
+        toolBar.add(copiarBt);
+        
+        JButton pegarBt = new JButton("Pegar", UIManager.getIcon("Table.pasteIcon"));
+        pegarBt.setToolTipText("Pega los archivos/carpetas copiados/cortados");
+        pegarBt.addActionListener(e -> pasteFiles());
+        toolBar.add(pegarBt);
+        
+        toolBar.addSeparator();
+        
+        JButton eliminarBt = new JButton("Eliminar", UIManager.getIcon("InternalFrame.closeIcon"));
+        eliminarBt.setToolTipText("Mueve el archivo o carpeta a la Papelera");
+        eliminarBt.addActionListener(e -> deleteSelectedFiles());
+        toolBar.add(eliminarBt);
         
         return toolBar;
     }
@@ -209,6 +241,178 @@ public class fileExplorer extends JPanel{
              }
         }   
     }
+    
+    
+    
+    
+    private void copySelectedFiles(boolean isCut){
+        int[] selectedRows = fileTable.getSelectedRows();
+        if(selectedRows.length==0){
+            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a copiar/cortar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        
+        clipboardFiles.clear();
+        isCutOperation = isCut;
+        
+        for(int row: selectedRows){
+            File file= (File) tableModel.getValueAt(row, 0);
+            clipboardFiles.add(file);
+        }
+        
+        String operation = isCut ? "Cortar" : "Copiar";
+        JOptionPane.showMessageDialog(this, selectedRows.length + "elemento(s) preparado (s) para "+operation +".", "Portapapeles", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    
+    private void pasteFiles(){
+        
+        if(clipboardFiles.isEmpty()){
+            JOptionPane.showMessageDialog(this, "El portapapeles esta vacio", "Atencion", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        File targetDir= new File(currentDirPath);
+        
+        if(!targetDir.isDirectory()){
+            JOptionPane.showMessageDialog(this,"La ubicacion de destino no es una carpeta valida", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        boolean success = true;
+        List<File> sourceFiles = new ArrayList<>(clipboardFiles);
+        
+        for(File sourceFile: sourceFiles){
+            try{
+                File destFile = new File(targetDir, sourceFile.getName());
+                
+                
+                if(isCutOperation){
+                    Files.move(sourceFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }else{
+                    if(sourceFile.isDirectory()){
+                        recursiveCopy(sourceFile.toPath(), destFile.toPath());
+                    }else{
+                        Files.copy(sourceFile.toPath(), destFile.toPath(),StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+                
+            }catch(IOException e){
+                success = false;
+                JOptionPane.showMessageDialog(this, "Error al "+(isCutOperation ? "mover" : "copiar")+" "+ sourceFile.getName()+": "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        
+        if(success){
+            if(isCutOperation){
+                clipboardFiles.clear();
+                isCutOperation=false;
+            }
+            displayContents(targetDir);
+            updateTree(targetDir);
+            JOptionPane.showMessageDialog(this, "Elementos pegados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+        }  
+    }
+    
+    
+    
+    
+    private void recursiveCopy(Path source, Path dest) throws IOException{
+        if(!Files.exists(dest)){
+            Files.createDirectories(dest);
+        }
+        
+        
+        
+        try(var Stream = Files.walk(source)){
+            Stream.forEach(sourcePath -> {
+                
+                try{
+                    Path relative = source.relativize(sourcePath);
+                    Path destPath = dest.resolve(relative);
+
+
+                    if(Files.isDirectory(sourcePath)){
+                        if(!Files.exists(destPath)){
+                            Files.createDirectory(destPath);
+                        }
+                    }else{
+                        Files.copy(sourcePath, destPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                    }
+                }catch(IOException e){
+                    System.err.println("Error copiando "+sourcePath + ": "+e.getMessage());
+                }
+            });
+        }
+    }
+    
+    
+    
+    private void deleteSelectedFiles(){
+        int[] selectedRows= fileTable.getSelectedRows();
+        if(selectedRows.length==0){
+            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a eliminar.", "Atencion", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        
+        List<File> filesToDelete = new ArrayList<>();
+        for(int row: selectedRows){
+            File file= (File) tableModel.getValueAt(row,0);
+            filesToDelete.add(file);
+        }
+        
+        
+        int confirmation = JOptionPane.showConfirmDialog(this, 
+                "¿Esta seguro de que quiere mover "+selectedRows.length+ "elemento(s) a la Papelera?",
+                "Confirmar Eliminacion",
+                JOptionPane.YES_NO_OPTION);
+        
+        if(confirmation!= JOptionPane.YES_NO_OPTION){
+            return ;
+        }
+        
+        File papelera = new File(recycleBin);
+        boolean success=true;
+        
+        
+        for(File file: filesToDelete){
+            
+            if(file.getAbsolutePath().equals(recycleBin)){
+                JOptionPane.showMessageDialog(this, "No se puede eliminar la Papelera de Reciclaje", "Error de Eliminacion", JOptionPane.ERROR_MESSAGE);
+                success=false;
+                continue;
+            }
+            
+            
+            
+            //File file= (File) tableModel.getValueAt(row,0);
+            
+            
+            String uniqueName = file.getName()+"-"+ UUID.randomUUID().toString().substring(0,4);
+            File destFile = new File(recycleBin, uniqueName);
+            
+            
+            try{
+                Files.move(file.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }catch(IOException e){
+                success = false;
+                JOptionPane.showMessageDialog(this, "Error al mover "+file.getName()+ " a la Papelera: "+ e.getMessage(), "Error de eliminacion", JOptionPane.ERROR_MESSAGE);
+            }
+            
+            if(success){
+                File currentDir = new File(currentDirPath);
+                displayContents(currentDir);
+                updateTree(currentDir);
+                JOptionPane.showMessageDialog(this, "Elementos movidos a la Papelera con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+    
+    
+    
+    
     
     
     
@@ -323,6 +527,9 @@ public class fileExplorer extends JPanel{
             Arrays.sort(children, Comparator.comparing(File::getName)); //posiblemente quitar esto para dejarlo a merced de usuario
             
             for(File child: children){
+                
+                if(child.getAbsolutePath().equals(recycleBin))continue;
+                
                 DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
                 
                 if(child.listFiles(File::isDirectory)!=null && child.listFiles(File::isDirectory).length>0){
@@ -402,6 +609,12 @@ public class fileExplorer extends JPanel{
             List<File> files = new ArrayList<>();
             
             for(File file:contents){
+                
+                if(file.getAbsolutePath().equals(recycleBin) && !directory.getAbsolutePath().equals(raizUsuario)){
+                    continue;
+                }
+                
+                
                 if(file.isDirectory()){
                     directorios.add(file);
                 }else{
