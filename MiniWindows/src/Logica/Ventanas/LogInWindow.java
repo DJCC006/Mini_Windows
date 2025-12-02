@@ -37,16 +37,18 @@ public class LogInWindow  extends sesionManager{
         //Obtencion de informacion de componentes graficos de pantalla local del usuario
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice gd =ge.getDefaultScreenDevice();
-        screen.setUndecorated(true);//limpieza inicial
-        gd.setFullScreenWindow(screen);
+        //screen.setUndecorated(true);//limpieza inicial
+        
+        //----NO OLVIDAR VOLVER A ACTIVAR ESTO----
+        gd.setFullScreenWindow(null);//linea que pone las cosas en pantalla completa//screen
         
         
         screen.setContentPane(panelFondo);
         screen.setTitle("Pantall Inicio Sesion");
-        //screen.setSize(1920,1200);  //Tamaño standard para menus
+        screen.setSize(1920,1200);  //Tamaño standard para menus
         screen.setResizable(false);
         screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-       // screen.setLocationRelativeTo(null);
+        screen.setLocationRelativeTo(null); //cosas para tamaño personalizado
         screen.setLayout(null);
         
         //Cargar imagen fondo

@@ -40,13 +40,18 @@ public class Escritorio {
         
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice gd =ge.getDefaultScreenDevice();
-        screen.setUndecorated(true);//limpieza inicial
-        gd.setFullScreenWindow(screen);
+        
+        
+        //---NO OLVIDAR VOLVER A ACTIVAR ESTO---
+        //screen.setUndecorated(true);//limpieza inicial
+        gd.setFullScreenWindow(null); //screen
         
         genFondos panelFondo = new genFondos("src\\recursos\\wallpapers\\Background1.png");
         screen.setTitle("ESCRITORIO");
         screen.setResizable(false);
+        screen.setSize(1920,1200);  //Tamaño standard para menus
         screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        screen.setLocationRelativeTo(null); //cosas para tamaño personalizado
         screen.setLayout(new BorderLayout());
         
         
