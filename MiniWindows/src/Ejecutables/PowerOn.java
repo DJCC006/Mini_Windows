@@ -4,6 +4,8 @@
  */
 package Ejecutables;
 
+import Instagram.instaController;
+import Instagram.instaManager;
 import Logica.ManejoUsuarios.User;
 import Logica.ManejoUsuarios.UsuariosControlador;
 import Logica.Ventanas.LogInWindow;
@@ -23,6 +25,11 @@ public class PowerOn {
         }catch(IOException e){
             System.out.println("ERROR AL CREAR ADMIN");
         }
+        //Creacion de carpeta que maneja externamente Instagram
+        instaManager instagram= new instaManager();
+        instaController.getInstance().setInsta(instagram);//inicializacion de singelton para trabajar con la informacion de isntagram
+        
+        
         //Esto es pasable para admin. Este mismo bloque se ejecuta cuando se cree algun otro usuario
         adminUser.setTyp("ADMIN");
         ArrayList<User> usuarios = new ArrayList<>();
