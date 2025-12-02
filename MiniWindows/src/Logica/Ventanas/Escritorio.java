@@ -154,7 +154,7 @@ public class Escritorio {
               
               //CMD newCmd = new CMD(screen);
               
-             JInternalFrame newfManager = createFileWindow();
+             JInternalFrame newfManager = createFileWindow(panelFondo);
              panelFondo.add(newfManager);
              try{
                  newfManager.setSelected(true);
@@ -201,6 +201,24 @@ public class Escritorio {
         txtBt.setOpaque(false);
         txtBt.setContentAreaFilled(false);
         txtBt.setBorderPainted(false);
+        
+        txtBt.addActionListener(new ActionListener(){
+          @Override 
+          public void actionPerformed(ActionEvent e){
+              
+             JInternalFrame newtEditor= createTextWindow();
+             
+             panelFondo.add(newtEditor);
+             try{
+                 newtEditor.setSelected(true);
+             }catch(java.beans.PropertyVetoException ex){
+                 //ignore
+             }
+          }
+                    
+        });
+        
+        
         
         JButton imagesBt = new JButton(imagesIcon);
         imagesBt.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
@@ -339,9 +357,9 @@ public class Escritorio {
     }
     
     
-    private JInternalFrame createFileWindow(){
+    private JInternalFrame createFileWindow(genFondos panelFondo){
          JInternalFrame fManagerFrame = new JInternalFrame("EXPLORADOR INSANO", true, true, true, true);
-         fileExplorer explorerPanel = new fileExplorer();
+         fileExplorer explorerPanel = new fileExplorer(panelFondo);
          fManagerFrame.add(explorerPanel, BorderLayout.CENTER);
          
          fManagerFrame.setSize(800,600);
@@ -349,6 +367,21 @@ public class Escritorio {
          fManagerFrame.setVisible(true);
          return fManagerFrame;
     }
+    
+    
+    private JInternalFrame createTextWindow(){
+         JInternalFrame fManagerFrame = new JInternalFrame("EDITOR DE TEXTO INSANO", true, true, true, true);
+         TextoPanel textEditPanel = new TextoPanel();
+         fManagerFrame.add(textEditPanel, BorderLayout.CENTER);
+         
+         fManagerFrame.setSize(900,600);
+         fManagerFrame.setLocation(50, 50);
+         fManagerFrame.setVisible(true);
+         return fManagerFrame;
+    }
+    
+    
+    
     
     
     

@@ -48,7 +48,7 @@ public class fileExplorer extends JPanel{
     private static String userName=UserLogged.getInstance().getUserLogged().getName();
     private static final String raizUsuario = "src\\Z\\Usuarios\\"+userName+"\\";
     private static final String recycleBin = raizUsuario+"Papelera";
-    
+    private genFondos panelFondo;
     
     
     
@@ -81,9 +81,9 @@ public class fileExplorer extends JPanel{
     
     
     
-    public fileExplorer(){
+    public fileExplorer(genFondos panelFondo){
         setLayout(new BorderLayout(5,5));
-        
+        this.panelFondo=panelFondo;
         
         
         File papelera = new File(recycleBin);
@@ -101,7 +101,7 @@ public class fileExplorer extends JPanel{
         
         //Ordenar
         JPanel panelSort = new JPanel(new BorderLayout());
-        pathLabel = new JLabel("Ruta Actual: "+ raizUsuario);
+        pathLabel = new JLabel("Ruta Actual: "+ formatDisplayPath(raizUsuario));
         pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
         panelSort.add(pathLabel, BorderLayout.WEST);
         
@@ -137,6 +137,17 @@ public class fileExplorer extends JPanel{
     }
     
     
+    private String formatDisplayPath(String userString){
+        int rootIndex = userString.indexOf(raizUsuario);
+        
+        return userString.substring(4);
+        
+//        
+//        if(rootIndex!=-1){
+//            return userString.substring(rootIndex);
+//        }
+//        return userString;
+    }
     
     
     private JToolBar setupToolBar(){
@@ -171,6 +182,16 @@ public class fileExplorer extends JPanel{
         eliminarBt.setToolTipText("Mueve el archivo o carpeta a la Papelera");
         eliminarBt.addActionListener(e -> deleteSelectedFiles());
         toolBar.add(eliminarBt);
+        
+        
+        JButton abrirBt = new JButton("Abrir", UIManager.getIcon("InternalFrame.openIcon"));
+        abrirBt.setToolTipText("Abrir el archivo seleccionado");
+        abrirBt.addActionListener(e -> openSelectedFile());
+        toolBar.add(abrirBt);
+        
+        
+        
+        
         
         return toolBar;
     }
@@ -243,6 +264,48 @@ public class fileExplorer extends JPanel{
     }
     
     
+    
+    private void openSelectedFile(){
+        int selectedRow = fileTable.getSelectedRow();
+        //verificar que no sea un directorio
+            
+        File  file= (File) fileTable.getValueAt(selectedRow,0);
+
+        if(file.isDirectory()){
+            JOptionPane.showMessageDialog(this, "Solamente abrir ARCHIVOS, no directorios", "Atencion", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+
+        String nameFile = file.getName();
+
+        //ejecutar codigo de identificador
+
+        //Checkar si es tipo para musica
+        if(nameFile.toLowerCase().endsWith(".wav") || nameFile.toLowerCase().endsWith(".mp3")){
+            JInternalFrame newImages= createMusicWindow();
+            panelFondo.add(newImages);
+             try{
+                 newImages.setSelected(true);
+             }catch(java.beans.PropertyVetoException ex){
+                 //ignore
+             }
+
+        }
+
+
+
+        if(nameFile.toLowerCase().endsWith(".png") || nameFile.toLowerCase().endsWith(".jpg")){
+            JInternalFrame newImages= createGalleryWindow();
+            panelFondo.add(newImages);
+             try{
+                 newImages.setSelected(true);
+             }catch(java.beans.PropertyVetoException ex){
+                 //ignore
+             }
+        }
+            
+    }
     
     
     private void copySelectedFiles(boolean isCut){
@@ -575,6 +638,25 @@ public class fileExplorer extends JPanel{
             }
             
         });
+        
+        fileTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        
+        fileTable.addMouseListener(new java.awt.event.MouseAdapter(){
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e){
+                if(e.getClickCount()==2){
+                    int row = fileTable.getSelectedRow();
+                    if(row!=-1){
+                        File file = (File) tableModel.getValueAt(fileTable.convertRowIndexToModel(row),0);
+                        
+                        if(file.isDirectory()){
+                            displayContents(file);
+                            updateTree(file);
+                        }
+                    }
+                }
+            }
+        });
     }
     
     
@@ -779,6 +861,36 @@ public class fileExplorer extends JPanel{
     }
     
     
+    
+    
+    
+    //METODOS PARA EJECUTADORES
+     private JInternalFrame createMusicWindow(){
+        JInternalFrame musicFrame = new JInternalFrame("MUSIC INSANO", true, true, true, true);
+        audioPlayer musicPanel = new audioPlayer();
+        musicFrame.add(musicPanel, BorderLayout.CENTER);
+        
+        musicFrame.setSize(650,450);
+        musicFrame.setLocation(100, 100);
+        musicFrame.setVisible(true);
+        return musicFrame;
+    }
+    
+    
+     private JInternalFrame createGalleryWindow(){
+        JInternalFrame galleryFrame = new JInternalFrame("GALERIA INSANA", true, true, true, true);
+        VisorImagenes galeriapanel = new VisorImagenes();
+        galleryFrame.add(galeriapanel, BorderLayout.CENTER);
+        
+        galleryFrame.setSize(900,600);
+        galleryFrame.setLocation(100, 100);
+        galleryFrame.setVisible(true);
+        return galleryFrame;
+    }
+     
+     
+     
+     
     /*
     
     private class FileTreeRenderer extends DefaultTreeCellRenderer{
