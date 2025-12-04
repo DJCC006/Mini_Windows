@@ -34,6 +34,10 @@ import javax.swing.JPopupMenu;
  * @author David
  */
 public class Escritorio {
+    
+    
+    genFondos panelFondo;
+    
     public Escritorio(){
         
         JFrame screen = new JFrame();
@@ -47,7 +51,7 @@ public class Escritorio {
         //screen.setUndecorated(true);//limpieza inicial
         gd.setFullScreenWindow(null); //screen
         
-        genFondos panelFondo = new genFondos("src\\recursos\\wallpapers\\Background1.png");
+        panelFondo = new genFondos("src\\recursos\\wallpapers\\Background1.png");
         screen.setTitle("ESCRITORIO");
         screen.setResizable(false);
         screen.setSize(1920,1200);  //Tamaño standard para menus
@@ -314,6 +318,7 @@ public class Escritorio {
          instaBt.addActionListener(new ActionListener(){
           @Override 
           public void actionPerformed(ActionEvent e){
+             
               createInstaWindow();
              
           }
@@ -439,11 +444,11 @@ public class Escritorio {
     
     
     private void createInstaWindow(){
-        JFrame frame = new JFrame("Outstagram Login Test");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JFrame frame = new JFrame("OUTSTAGRAM");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setResizable(false);
         frame.setContentPane(new InstaLoginUI());
-        frame.pack();
+        frame.pack();;
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }

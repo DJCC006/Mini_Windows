@@ -4,13 +4,19 @@
  */
 package Logica.Ventanas;
 
+import Logica.ManejoUsuarios.User;
+import Logica.ManejoUsuarios.UsuariosControlador;
+import Logica.ManejoUsuarios.sesionManager;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.io.File;
+import java.io.IOException;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 /**
@@ -37,6 +43,27 @@ public class userManagement extends JPanel {
        JButton createUserButton = new JButton("Crear Nuevo Usuario");
        createUserButton.setFont(new Font("Arial", Font.PLAIN, 14));
        createUserButton.addActionListener(e -> {
+           String name= JOptionPane.showInputDialog(null, "Ingrese el nombre del nuevo usuario: ");
+           String pass = JOptionPane.showInputDialog(null, "Ingrese contraseña para nuevo usuario: ");
+           
+           boolean verName= sesionManager.userCheck(name);
+           boolean verPass = sesionManager.passwordCheck(pass);
+           
+           if(verName!=true && verPass!= true){
+               JOptionPane.showMessageDialog(null, "No se pudo crear nuevo usuario");
+           }else{
+               User nuevoUsuario = new User(name, pass);
+               try{
+                  nuevoUsuario.createInitUserDir();
+                  nuevoUsuario.createInicialDirs();
+                  UsuariosControlador.getInstance().getUsuarios().add(nuevoUsuario);
+                  JOptionPane.showMessageDialog(null, "Usuario Creado Exitosamente");
+               }catch(IOException a){   
+               }
+           }
+           
+           
+           
            System.out.println("Aqui creamos nuevo usuario");
        });
         

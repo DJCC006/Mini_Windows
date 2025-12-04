@@ -4,6 +4,7 @@
  */
 package Instagram;
 
+import Logica.Ventanas.genFondos;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +30,8 @@ public class InstaProfileUI extends JPanel {
     private final Color COLOR_TEXT = Color.WHITE;
     private final Color COLOR_BORDER = new Color(100, 100, 100);
     private final Font FONT_TEXT = new Font("Comic Sans MS", Font.PLAIN, 12);
-
+    
+    private genFondos panelFondo;
     public InstaProfileUI(String username) {
         this.username = username;
         setLayout(new BorderLayout());
@@ -213,6 +215,7 @@ public class InstaProfileUI extends JPanel {
 
     private void cerrarSesion() {
         Window window = SwingUtilities.getWindowAncestor(this);
+        
         if (window instanceof JFrame) {
             JFrame frame = (JFrame) window;
             frame.setContentPane(new InstaLoginUI()); 
@@ -240,4 +243,18 @@ public class InstaProfileUI extends JPanel {
         btn.setBorder(null);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
+    
+//    
+//    private JInternalFrame createLogWindow(){
+//        JInternalFrame Frame = new JInternalFrame("OUTSTAGRAM", true, true, true, true);
+//         //InstaLoginUI instaPanel = new InstaLoginUI(panelFondo);
+//         Frame.add(instaPanel, BorderLayout.CENTER);
+//         
+//         Frame.setSize(400,650);
+//         Frame.setLocation(100, 50);
+//         Frame.setVisible(true);
+//        return Frame;
+//    }
+//    
+    
 }
