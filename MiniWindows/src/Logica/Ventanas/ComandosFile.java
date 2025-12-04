@@ -12,12 +12,22 @@ import java.util.Date;
  *
  * @author esteb
  */
-
 public class ComandosFile {
+
     private File pathActual;
+    private final File rootPath;
+
+    public ComandosFile(String pathInicial, String pathRaiz) {
+        this.pathActual = new File(pathInicial);
+        this.rootPath = new File(pathRaiz);
+
+        if (!this.pathActual.exists()) {
+            this.pathActual = this.rootPath;
+        }
+    }
 
     public ComandosFile(String pathInicial) {
-        this.pathActual = new File(pathInicial);
+        this(pathInicial, pathInicial);
     }
 
     public File getPathActual() {
@@ -26,6 +36,9 @@ public class ComandosFile {
 
     public boolean cd(File nuevaRuta) {
         if (nuevaRuta != null && nuevaRuta.exists() && nuevaRuta.isDirectory()) {
+            if (!nuevaRuta.getAbsolutePath().startsWith(rootPath.getAbsolutePath())) {
+                return false;
+            }
             pathActual = nuevaRuta;
             return true;
         }
@@ -33,10 +46,16 @@ public class ComandosFile {
     }
 
     public boolean cdBack() {
-        File padre = pathActual.getParentFile();
-        if (padre == null) {
+        if (pathActual.equals(rootPath) || pathActual.getAbsolutePath().equals(rootPath.getAbsolutePath())) {
             return false;
         }
+
+        File padre = pathActual.getParentFile();
+
+        if (padre == null || !padre.getAbsolutePath().startsWith(rootPath.getAbsolutePath())) {
+            return false;
+        }
+
         pathActual = padre;
         return true;
     }
@@ -45,60 +64,57 @@ public class ComandosFile {
         if (nombre == null || nombre.trim().isEmpty()) {
             return "Error: nombre no válido";
         }
-        if (pathActual == null || !pathActual.exists() || !pathActual.isDirectory()) {
-            return "Error: ruta actual no válida";
-        }
         File objetivo = new File(pathActual, nombre);
         if (objetivo.exists()) {
-            return "Error: ya existe: " + objetivo.getAbsolutePath();
+            return "Error: ya existe.";
         }
         if (objetivo.mkdirs()) {
-            return "Directorio creado: " + objetivo.getAbsolutePath();
+            return "Directorio creado.";
         }
-        return "Error: no se pudo crear el directorio";
+        return "Error: fallo al crear.";
     }
 
     public String mfile(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
             return "Error: nombre no válido";
         }
-        if (pathActual == null || !pathActual.exists() || !pathActual.isDirectory()) {
-            return "Error: ruta actual no válida";
-        }
         File objetivo = new File(pathActual, nombre);
         if (objetivo.exists()) {
-            return "Error: ya existe: " + objetivo.getAbsolutePath();
+            return "Error: ya existe.";
         }
+
         File parent = objetivo.getParentFile();
         if (parent != null && !parent.exists()) {
             parent.mkdirs();
         }
+
         try {
             if (objetivo.createNewFile()) {
-                return "Archivo creado: " + objetivo.getAbsolutePath();
-            } else {
-                return "Error: no se pudo crear el archivo";
+                return "Archivo creado.";
             }
         } catch (IOException e) {
-            return "Error al crear archivo: " + e.getMessage();
+            return "Error IO: " + e.getMessage();
         }
+        return "Error creando archivo.";
     }
 
     public String rm(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
             return "Error: nombre no válido";
         }
-        if (pathActual == null) {
-            return "Error: ruta actual no válida";
-        }
         File target = new File(pathActual, nombre);
+
+        if (target.getAbsolutePath().equals(rootPath.getAbsolutePath())) {
+            return "Error: No puedes borrar la raíz.";
+        }
         if (!target.exists()) {
-            return "Error: el archivo o carpeta no existe: " + target.getAbsolutePath();
+            return "Error: no existe.";
         }
+
         if (borrarRecursivo(target)) {
-            return "Archivo/directorio eliminado: " + target.getAbsolutePath();
+            return "Eliminado.";
         }
-        return "Error: no se pudo eliminar el archivo/directorio";
+        return "Error eliminando.";
     }
 
     private boolean borrarRecursivo(File file) {
@@ -122,21 +138,19 @@ public class ComandosFile {
         } else {
             archivoDir = new File(pathActual, nombre);
         }
-        if (archivoDir == null || !archivoDir.exists()) {
-            return "Error: el archivo o carpeta no existe: " + (archivoDir != null ? archivoDir.getPath() : "");
+
+        if (!archivoDir.getAbsolutePath().startsWith(rootPath.getAbsolutePath())) {
+            return "Acceso denegado.";
         }
-        if (!archivoDir.isDirectory()) {
-            return "Error: no es un directorio: " + archivoDir.getPath();
+        if (!archivoDir.exists() || !archivoDir.isDirectory()) {
+            return "Error: directorio no encontrado.";
         }
-        return dir(archivoDir);
+
+        return dirInterno(archivoDir);
     }
 
-    private String dir(File archivoDir) {
-        if (!archivoDir.isDirectory()) {
-            return "Acción no permitida";
-        }
+    private String dirInterno(File archivoDir) {
         StringBuilder contenido = new StringBuilder();
-        contenido.append(String.format("%-20s %-10s %-12s %-30s%n", "Última Modificación", "Tipo", "Tamaño", "Nombre"));
 
         int archivos = 0;
         int directorios = 0;
@@ -144,90 +158,49 @@ public class ComandosFile {
 
         File[] hijos = archivoDir.listFiles();
         if (hijos != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy  HH:mm");
             for (File child : hijos) {
                 String fecha = sdf.format(new Date(child.lastModified()));
-                String tipo;
-                String tamaño;
+                String tipo = child.isDirectory() ? "<DIR>" : "     ";
+                String tam = child.isDirectory() ? "" : String.format("%,d", child.length());
+                String nom = child.getName();
+
                 if (child.isDirectory()) {
-                    tipo = "<DIR>";
-                    tamaño = "-";
                     directorios++;
                 } else {
-                    tipo = "FILE";
-                    long b = child.length();
-                    tamaño = formatearTamaño(b);
                     archivos++;
-                    bytesTotal += b;
+                    bytesTotal += child.length();
                 }
-                String nombre = child.getName();
-                contenido.append(String.format("%-20s %-10s %-12s %-30s%n", fecha, tipo, tamaño, nombre));
+
+                contenido.append(String.format("%s    %-5s          %10s %s%n", fecha, tipo, tam, nom));
             }
         }
-
-        long espacioLibre = archivoDir.getUsableSpace();
-
-        contenido.append(System.lineSeparator())
-                .append(archivos).append(" archivos\t").append(formatearTamaño(bytesTotal)).append(System.lineSeparator());
-        contenido.append(directorios).append(" directorios\t").append(formatearTamaño(espacioLibre)).append(" libres").append(System.lineSeparator());
+        contenido.append(String.format("%16d archivos %15s bytes%n", archivos, String.format("%,d", bytesTotal)));
+        contenido.append(String.format("%16d directorios %14s bytes libres%n", directorios, String.format("%,d", archivoDir.getFreeSpace())));
 
         return contenido.toString();
     }
 
-    private String formatearTamaño(long bytes) {
-        double kb = bytes / 1024.0;
-        double mb = kb / 1024.0;
-        double gb = mb / 1024.0;
-
-        if (gb >= 1) {
-            return String.format("%.2f GB", gb);
-        } else if (mb >= 1) {
-            return String.format("%.2f MB", mb);
-        } else if (kb >= 1) {
-            return String.format("%.2f KB", kb);
-        } else {
-            return bytes + " B";
-        }
-    }
-
     public String escribirTexto(String nombre, String texto) {
-        if (nombre == null || nombre.trim().isEmpty()) {
-            return "Error: nombre no válido";
-        }
-        if (pathActual == null) {
-            return "Error: ruta actual no válida";
-        }
         File target = new File(pathActual, nombre);
-        if (!target.exists()) {
-            return "Error: el archivo no existe: " + target.getAbsolutePath();
-        }
         if (target.isDirectory()) {
-            return "Error: no se puede escribir en una carpeta";
+            return "Error: es una carpeta.";
         }
         if (texto == null) {
             texto = "";
         }
         try (FileWriter fw = new FileWriter(target, false); PrintWriter pw = new PrintWriter(fw)) {
             pw.print(texto);
-            return "Texto escrito en archivo: " + target.getAbsolutePath();
+            return "Guardado.";
         } catch (IOException e) {
-            return "Error al escribir archivo: " + e.getMessage();
+            return "Error: " + e.getMessage();
         }
     }
 
     public String leerTexto(String nombre) {
-        if (nombre == null || nombre.trim().isEmpty()) {
-            return "Error: nombre no válido";
-        }
-        if (pathActual == null) {
-            return "Error: ruta actual no válida";
-        }
         File target = new File(pathActual, nombre);
-        if (!target.exists()) {
-            return "Error: el archivo no existe: " + target.getAbsolutePath();
-        }
-        if (target.isDirectory()) {
-            return "Error: no se puede leer una carpeta";
+        if (!target.exists() || target.isDirectory()) {
+            return "Error leyendo archivo.";
         }
         StringBuilder contenido = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(target))) {
@@ -236,7 +209,7 @@ public class ComandosFile {
                 contenido.append(linea).append(System.lineSeparator());
             }
         } catch (IOException e) {
-            return "Error al leer el archivo: " + e.getMessage();
+            return "Error IO.";
         }
         return contenido.toString();
     }
