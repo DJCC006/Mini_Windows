@@ -162,15 +162,15 @@ public class InstaLoginUI extends JPanel {
     }
 
     public static void main(String[] args) {
-        instaManager manager = new instaManager();
-        instaController.getInstance().setInsta(manager);
+      //  instaManager manager = new instaManager();
+        //instaController.getInstance().setInsta(manager);
 
-        JFrame frame = new JFrame("Outstagram Login Test");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-        frame.setContentPane(new InstaLoginUI());
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+//        JFrame frame = new JFrame("Outstagram Login Test");
+//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        frame.setResizable(false);
+//        frame.setContentPane(new InstaLoginUI());
+//        frame.pack();
+//        frame.setLocationRelativeTo(null);
+//        frame.setVisible(true);
     }
 }

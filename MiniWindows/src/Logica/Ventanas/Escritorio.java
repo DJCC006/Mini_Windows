@@ -4,6 +4,7 @@
  */
 package Logica.Ventanas;
 
+import Instagram.InstaLoginUI;
 import Logica.ManejoUsuarios.UserLogged;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -115,7 +116,33 @@ public class Escritorio {
             
         });
         
+        
+        //Creacion de opcion si es admin
+        if(UserLogged.getInstance().getUserLogged().getName().equals("ADMIN")){
+            JMenuItem managerOption= new JMenuItem("Gestionar Usuarios");
+            managerOption.addActionListener(e -> {
+                JInternalFrame newfGestor = createGestorWindow();
+                panelFondo.add(newfGestor);
+                try{
+                    newfGestor.setSelected(true);
+                }catch(java.beans.PropertyVetoException ex){
+
+                }
+                
+                
+                
+            });
+            
+            menu.add(managerOption);
+            menu.addSeparator();
+        }
+            
+        
+        
         menu.add(logoutItem);
+        
+        
+        
         
         
         
@@ -284,6 +311,18 @@ public class Escritorio {
         instaBt.setContentAreaFilled(false);
         instaBt.setBorderPainted(false);
         
+         instaBt.addActionListener(new ActionListener(){
+          @Override 
+          public void actionPerformed(ActionEvent e){
+              createInstaWindow();
+             
+          }
+                    
+        });
+        
+        
+        
+        
         Dimension spacer = new Dimension(10,0);
         centerPanel.add(filesBt);
         centerPanel.add(Box.createRigidArea(spacer));
@@ -386,7 +425,28 @@ public class Escritorio {
     }
     
     
+    private JInternalFrame createGestorWindow(){
+         JInternalFrame fGestorFrame = new JInternalFrame("GESTOR DE USUARIOS INSANO", true, true, true, true);
+         userManagement gestorPanel = new userManagement();
+         fGestorFrame.add(gestorPanel, BorderLayout.CENTER);
+         
+         fGestorFrame.setSize(400,300);
+         fGestorFrame.setLocation(50, 50);
+         fGestorFrame.setVisible(true);
+         return fGestorFrame;
+    }
     
+    
+    
+    private void createInstaWindow(){
+        JFrame frame = new JFrame("Outstagram Login Test");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
+        frame.setContentPane(new InstaLoginUI());
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
     
     
     
