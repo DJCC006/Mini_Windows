@@ -424,21 +424,33 @@ public class instaManager {
     }
     
     
-    public void addFollow(String username) throws IOException{
-        
-        //AGREGAR VERIFICACION DE USERNAME REPETIDO
-        
+    public boolean addFollow(String username) throws IOException{
         File userPath = new File(loggedUserDir, "\\following.ins");
         RandomAccessFile followsFile = new RandomAccessFile(userPath, "rw");
         
+        //Verificacion de username repetido
+        followsFile.seek(0);
+        boolean repetido=false;
+        while(followsFile.getFilePointer()< followsFile.length()){
+            String readName= followsFile.readUTF();
+            if(readName.equals(username)){
+                repetido=true;
+            }
+        }
+        
         //ubicarme dentro del archivo followings del usuario y agregar nuevo follow
-        followsFile.seek(followsFile.length());
-        followsFile.writeUTF(username);
+        if(!repetido){
+            followsFile.seek(followsFile.length());
+            followsFile.writeUTF(username);
+            
+            //agregar follower a cuenta seguida
+            addFollower(username,loggedUser);
+            return true;
+            
+        }
         
-        
-        //agregar follower a cuenta seguida
-        addFollower(username,loggedUser);
-        
+        return false; //el return false es que identifico el username como repetido
+
     }
    
     
