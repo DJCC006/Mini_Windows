@@ -21,7 +21,8 @@ public class instaManager {
     
     private String mainRoot = "Instagram";
     private String usersDir = "Instagram\\users";
-    
+    private File loggedUserDir;
+    private String loggedUser;
     
     public instaManager(){
         
@@ -96,6 +97,19 @@ public class instaManager {
     }
     
     
+    
+    //Metodo que servira para establecer la direccion del usuario loggeado
+    public void setLoggedUser(String username) throws IOException{
+        loggedUserDir = new File(usersDir, username);
+        loggedUser=username;
+    }
+    
+    
+    //Metodo que borra la direccion del usuario cuando este cierra sesion
+    public void loggoutUser() throws IOException{
+        loggedUserDir= null;
+        loggedUser=null;
+    }
     
     
     //Getters de informacion de usuario
@@ -385,6 +399,167 @@ public class instaManager {
             users.readUTF();
         }
         return false;
+    }
+    
+    
+    
+    //----METODOS PARA OBTENER INFORMACION PROPIA DEL USUARIO LOGEADO-----
+    
+    private void addFollower(String username, String newFollower) throws IOException{
+        //Ubicarme dentro del archivo de la cuenta que recibira el follower
+        String user2Path = usersDir+File.separator+username;
+        File user2File = new File(user2Path, "\\followers.ins");
+        
+        RandomAccessFile followersFile = new RandomAccessFile(user2File, "rw");
+        
+        
+        //ubicar el puntero
+        followersFile.seek(followersFile.length());
+        //agregar informacion respectiva del nuevo follower
+        followersFile.writeUTF(newFollower);
+        
+        
+    }
+    
+    
+    public void addFollow(String username) throws IOException{
+        File userPath = new File(loggedUserDir, "\\following.ins");
+        RandomAccessFile followsFile = new RandomAccessFile(userPath, "rw");
+        
+        //ubicarme dentro del archivo followings del usuario y agregar nuevo follow
+        followsFile.seek(followsFile.length());
+        followsFile.writeUTF(username);
+        
+        
+        //agregar follower a cuenta seguida
+        addFollower(username,loggedUser);
+        
+    }
+   
+    
+    
+    public void quitarFollow(String username) throws IOException{
+        File fileOriginal = new File(loggedUserDir, "\\following.ins");
+        File fileTemp = new File(loggedUserDir, "\\following.temp");
+        RandomAccessFile oFile= new RandomAccessFile(fileOriginal, "rw");
+        RandomAccessFile tFile= new RandomAccessFile(fileTemp, "rw");
+        
+        
+        String readUsername;
+        boolean encontrado=false;
+        
+        oFile.seek(0);
+        tFile.seek(0);
+        while(oFile.getFilePointer()<oFile.length()){
+            readUsername=oFile.readUTF();
+            if(!readUsername.equals(username)){
+                tFile.writeUTF(readUsername);
+            }else{
+                encontrado=true;
+                //No necesariamente se sale forzosamente del bucle, hay que hacer que termine
+            }
+            
+        }
+        
+        if(encontrado){
+            if(!fileOriginal.delete()){
+                throw new IOException("No se pudo borrar el archivo original");
+            }
+            if(!fileTemp.renameTo(fileOriginal)){
+                throw new IOException("No se pudo renombrar el archivo temporal");
+            }
+            System.out.println("Se ha creado la sustitucion de archivos correcta para follows");
+            
+        }else{
+            fileTemp.delete();
+            System.out.println("No se encontro al usuario indicado");
+        }
+        
+        
+        //llamamos el metodo que hara lo mismo pero para followers
+        quitarFollower(username, loggedUser);
+    }
+    
+    
+    
+    private void quitarFollower(String username, String follower) throws IOException{
+        String user2Path = usersDir+File.separator+username;
+        File fileOriginal = new File(user2Path, "\\followers.ins");
+        File fileTemp = new File(user2Path, "\\followers.temp");
+        
+        RandomAccessFile followersFile = new RandomAccessFile(fileOriginal, "rw");
+        RandomAccessFile tFile = new RandomAccessFile(fileTemp, "rw");
+        
+        
+        String readUsername;
+        boolean encontrado=false;
+        
+        followersFile.seek(0);
+        tFile.seek(0);
+        while(followersFile.getFilePointer()<followersFile.length()){
+            readUsername=followersFile.readUTF();
+            if(!readUsername.equals(username)){
+                tFile.writeUTF(readUsername);
+            }else{
+                encontrado=true;
+                //No necesariamente se sale forzosamente del bucle, hay que hacer que termine
+            }
+            
+        }
+        
+        if(encontrado){
+            if(!fileOriginal.delete()){
+                throw new IOException("No se pudo borrar el archivo original");
+            }
+            if(!fileTemp.renameTo(fileOriginal)){
+                throw new IOException("No se pudo renombrar el archivo temporal");
+            }
+            System.out.println("Se ha creado la sustitucion de archivos correcta para followers");
+            
+        }else{
+            fileTemp.delete();
+            System.out.println("No se encontro al usuario indicado");
+        }
+    }
+    
+    
+    //posiblemente revisar el tema del username --> hay que considerar el user al cual se efectuara la accion
+    public String showFollowers(String username) throws IOException{
+        String userPath = usersDir+File.separator+username;
+        File fileOriginal = new File(userPath, "\\followers.ins");
+        RandomAccessFile followersFile = new RandomAccessFile(fileOriginal, "rw");
+        
+        String listaFollowers="";
+        
+        
+        followersFile.seek(0);
+        while(followersFile.getFilePointer()<followersFile.length()){
+            String nameuser = followersFile.readUTF();
+            listaFollowers+=nameuser+"\n";
+        }
+        
+        
+        return listaFollowers;
+        
+    }
+    
+    
+    public String showFollows(String username) throws IOException{
+        String userPath = usersDir+File.separator+username;
+        File fileOriginal = new File(userPath, "\\following.ins");
+        RandomAccessFile followsFile = new RandomAccessFile(fileOriginal, "rw");
+        
+        String listaFollows="";
+        
+        
+        followsFile.seek(0);
+        while(followsFile.getFilePointer()<followsFile.length()){
+            String nameuser = followsFile.readUTF();
+            listaFollows+=nameuser+"\n";
+        }
+        
+        
+        return listaFollows;
     }
     
     
