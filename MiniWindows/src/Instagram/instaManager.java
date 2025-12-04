@@ -8,7 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import javax.swing.JOptionPane;
 
@@ -423,6 +425,9 @@ public class instaManager {
     
     
     public void addFollow(String username) throws IOException{
+        
+        //AGREGAR VERIFICACION DE USERNAME REPETIDO
+        
         File userPath = new File(loggedUserDir, "\\following.ins");
         RandomAccessFile followsFile = new RandomAccessFile(userPath, "rw");
         
@@ -562,5 +567,126 @@ public class instaManager {
         return listaFollows;
     }
     
+    
+    /*
+        FORMATO
+        STRING refImag
+        STRING autor
+        STRING fecha de post
+        STRING contenido
+    
+    */
+    
+    
+    //CONSIDERACION ->Se debe que realizar antes de usar esto una verificacion de la longitud del post
+    public void addPost(String imagRef, String autor, String contenido) throws IOException{
+        
+        //obtener fecha y formatearla
+        Calendar postDate = Calendar.getInstance();
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        String dateFormat= formato.format(postDate.getTime());
+        
+        //Agregar post a insta.ins
+        File postFiles= new File(loggedUserDir, "\\insta.ins");//TENER EN CUENTA QUE EL AGREGADO ES EN BASE AL USUARIO LOGEADO!
+        RandomAccessFile postArch= new RandomAccessFile(postFiles,"rw");
+        
+        postArch.seek(postArch.length());
+        postArch.writeUTF(imagRef);
+        postArch.writeUTF(autor);
+        postArch.writeUTF(dateFormat);
+        postArch.writeUTF(contenido);
+        
+        
+    }
+    
+    //Metodo de agregado auxi para agregar directamente a followers....en caso que la idea directa de getPosts no funcione
+    /*
+    private void addPostAux(String username, String imagRef, String autor, String fecha, String contenido) throws IOException{
+        String userPath = usersDir+File.separator+username;
+        File fileOriginal = new File(userPath, "\\insta.ins");
+        RandomAccessFile instaFile = new RandomAccessFile(fileOriginal, "rw");
+        
+        instaFile.seek(instaFile.length());
+        instaFile.writeUTF(imagRef);
+        instaFile.writeUTF(autor);
+        instaFile.writeUTF(fecha);
+        instaFile.writeUTF(contenido);        
+    }
+    
+    */
+    
+    
+  
+    
+    
+    //El metodo getPosts se hace en base a username, teniendo en cuenta la idea que hay que obtener los posts de los que sigo
+    private ArrayList getPosts(String username) throws IOException{
+        String userPath = usersDir+File.separator+username;
+        File fileOriginal = new File(userPath, "\\insta.ins");
+        RandomAccessFile instaFile = new RandomAccessFile(fileOriginal, "rw");
+        
+        ArrayList<String[]> posts = new ArrayList<>();
+        
+        //Se almacena en arrays de string para poder acceder a la informacion de cada post de manera mas sencilla
+        //Estructura:  IMAG REFERENCIA - AUTOR - FECHA - CONTENIDO
+        String[] post= new String[4];
+        
+        instaFile.seek(0);
+        while(instaFile.getFilePointer()< instaFile.length()){
+            //almacenar los componentes del comentario
+            post[0]=instaFile.readUTF();
+            post[1]= instaFile.readUTF();
+            post[2]= instaFile.readUTF();
+            post[3]= instaFile.readUTF();
+            
+            posts.add(post);//agregamos el post al arraylist de posts
+        }
+        
+        Collections.reverse(posts);//invertimos el orden del arraylist para asi empezar con los posts mas recientes
+        
+        return posts;
+        //Ya la idea seria que, a la hora de extraer los posts, se almacenan en un holder arraylist y luego se filtran a manera que solo se muestren los posts correspondientes a la imagen de publicacion
+        
+    }
+            
+    //LOGICA DE OBTENER POSTS DE SEGUIDOS ----!!!
+    //La idea es que cada usuario almacena dentro de si sus posts. A la hora de mostrar los comentarios, para mostrar los comentarios de los follows, habria que iterar
+    //sobre todos usuarios que seguimos y obteners sus posts directamente
+    //Se evita el enfoque de escribirlos directamente tambien en los posts de los seguidores ya que, cuando se deje de seguir a alguien, estos posts seguiran almacenados
+    //mucho trabajo y hay que mimimimi son la 1:04AM
+    //Esteban, ¿Qué pasó master, tan temprano se durmió?    <---cuando leas esto borralo, no sea que lo lean los que revisen el codigo despues XD
+    
+    
+    
+    //Metodo que intenta simular esta logica, para simplemente agregarlo [FALTA PROBARLO Y TESTEARLO]
+      public String getPostsfromUser(String imagReferencia, String username) throws IOException{
+        String listaPosts="";
+        
+        ArrayList<String[]> misPosts= getPosts(username); //obtenemos los posts del usuario indicado
+        
+        //filtrado en base a publicacion
+        for(String[] post: misPosts){
+            String imagURL = post[0];
+            
+            
+            
+            /*
+
+            FORMATO
+             [USERNAME] escribio:
+                "bla bla bla" el [fecha]
+
+            */            
+            //agregado a la lista
+            if(imagURL.equals(imagReferencia)){
+                listaPosts+= post[1]+" escribio: "
+                        + "\n '"+post[3]+"' el ["+post[2]+"]\n\n";
+            }
+            
+        }
+        
+        //devolver
+        return listaPosts; //devolvemos tremenda lista con todos los posts del que seguimos con respecto a la publicacion
+    }
     
 }
