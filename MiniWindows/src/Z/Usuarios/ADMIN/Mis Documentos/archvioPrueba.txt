@@ -1,15 +1,7 @@
 <html>
   <head>
-
+    
   </head>
   <body>
-    <p>
-      Hola mundo este es un archivo de prueba para probar el editor de texto 
-      que hizo <font color="#ff3333" size="7" face="Papyrus">Esteban</font>
-    </p>
-    <p>
-      <font face="Segoe Script" color="#0000ff" size="7">Est&#225; bien insano 
-      jsjsjs</font>
-    </p>
   </body>
 </html>
