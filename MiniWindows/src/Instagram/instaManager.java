@@ -96,6 +96,8 @@ public class instaManager {
         RandomAccessFile followers= new RandomAccessFile(userFolder+"\\followers.ins", "rw");
         RandomAccessFile following = new RandomAccessFile(userFolder+"\\following.ins", "rw");
         RandomAccessFile posts = new RandomAccessFile(userFolder+"\\insta.ins", "rw");
+        // AGREGADO: Archivo de comentarios para que no falle al iniciar
+        RandomAccessFile comments = new RandomAccessFile(userFolder+"\\comments.ins", "rw");
     }
     
     
@@ -300,7 +302,7 @@ public class instaManager {
     }
     
     
-    public String getProfilPicRoute(String username) throws IOException {
+    public String getProfilePicRoute(String username) throws IOException {
         users.seek(0);
         
         while(users.getFilePointer()< users.length()){
@@ -611,40 +613,27 @@ public class instaManager {
         
     }
     
-    //Metodo de agregado auxi para agregar directamente a followers....en caso que la idea directa de getPosts no funcione
-    /*
-    private void addPostAux(String username, String imagRef, String autor, String fecha, String contenido) throws IOException{
-        String userPath = usersDir+File.separator+username;
-        File fileOriginal = new File(userPath, "\\insta.ins");
-        RandomAccessFile instaFile = new RandomAccessFile(fileOriginal, "rw");
-        
-        instaFile.seek(instaFile.length());
-        instaFile.writeUTF(imagRef);
-        instaFile.writeUTF(autor);
-        instaFile.writeUTF(fecha);
-        instaFile.writeUTF(contenido);        
-    }
-    
-    */
-    
-    
-  
-    
     
     //El metodo getPosts se hace en base a username, teniendo en cuenta la idea que hay que obtener los posts de los que sigo
-    private ArrayList getPosts(String username) throws IOException{
+    // CAMBIO: Ahora es PUBLIC para poder llamarlo desde el Perfil para llenar el GRID
+    public ArrayList<String[]> getPosts(String username) throws IOException{
         String userPath = usersDir+File.separator+username;
         File fileOriginal = new File(userPath, "\\insta.ins");
-        RandomAccessFile instaFile = new RandomAccessFile(fileOriginal, "rw");
         
         ArrayList<String[]> posts = new ArrayList<>();
         
+        // Si no existe el archivo de posts (usuario nuevo), devolver lista vacia
+        if (!fileOriginal.exists()) return posts;
+        
+        RandomAccessFile instaFile = new RandomAccessFile(fileOriginal, "rw");
+        
         //Se almacena en arrays de string para poder acceder a la informacion de cada post de manera mas sencilla
         //Estructura:  IMAG REFERENCIA - AUTOR - FECHA - CONTENIDO
-        String[] post= new String[4];
+        
         
         instaFile.seek(0);
         while(instaFile.getFilePointer()< instaFile.length()){
+            String[] post= new String[4];
             //almacenar los componentes del comentario
             post[0]=instaFile.readUTF();
             post[1]= instaFile.readUTF();
@@ -652,6 +641,7 @@ public class instaManager {
             post[3]= instaFile.readUTF();
             
             posts.add(post);//agregamos el post al arraylist de posts
+            post = new String[4]; // FIX: Nueva instancia
         }
         
         Collections.reverse(posts);//invertimos el orden del arraylist para asi empezar con los posts mas recientes
@@ -700,5 +690,53 @@ public class instaManager {
         //devolver
         return listaPosts; //devolvemos tremenda lista con todos los posts del que seguimos con respecto a la publicacion
     }
+
+    // --- NUEVO: SISTEMA DE COMENTARIOS (ESTO ERA LO QUE FALTABA) ---
     
+    /**
+     * Guarda un comentario en el archivo 'comments.ins' del DUEÑO DEL POST.
+     * Estructura: PathImagen (ID) | AutorComentario | Texto | Fecha(long)
+     */
+    public void addComment(String postOwner, String imagePath, String author, String comment) throws IOException {
+        String userPath = usersDir + File.separator + postOwner;
+        File file = new File(userPath, "comments.ins");
+        
+        // Asegurar que existe (aunque initUserFiles lo crea)
+        if (!file.exists()) file.createNewFile();
+
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            raf.seek(raf.length());
+            raf.writeUTF(imagePath); // Identificador: La ruta de la imagen comentada
+            raf.writeUTF(author);    // Quién comentó
+            raf.writeUTF(comment);   // Qué dijo
+            raf.writeLong(Calendar.getInstance().getTimeInMillis()); // Cuándo
+        }
+    }
+
+    /**
+     * Recupera todos los comentarios asociados a una imagen específica.
+     */
+    public ArrayList<String[]> getComments(String postOwner, String imagePath) throws IOException {
+        ArrayList<String[]> comments = new ArrayList<>();
+        String userPath = usersDir + File.separator + postOwner;
+        File file = new File(userPath, "comments.ins");
+        
+        if (!file.exists()) return comments;
+
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            raf.seek(0);
+            while (raf.getFilePointer() < raf.length()) {
+                String path = raf.readUTF();
+                String author = raf.readUTF();
+                String text = raf.readUTF();
+                long date = raf.readLong();
+
+                // Filtramos: Solo devolver comentarios de ESTA foto específica
+                if (path.equals(imagePath)) {
+                    comments.add(new String[]{author, text});
+                }
+            }
+        }
+        return comments;
+    }
 }

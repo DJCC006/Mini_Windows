@@ -4,12 +4,17 @@
  */
 package Instagram;
 
-import Logica.Ventanas.genFondos;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
@@ -24,14 +29,12 @@ public class InstaProfileUI extends JPanel {
     private JLabel lblStats;
     private JPanel gridFotos;
 
-    // COLORES "OUTSTAGRAM"
     private final Color COLOR_BG = Color.BLACK;
     private final Color COLOR_BTN = new Color(255, 69, 0);
     private final Color COLOR_TEXT = Color.WHITE;
     private final Color COLOR_BORDER = new Color(100, 100, 100);
     private final Font FONT_TEXT = new Font("Comic Sans MS", Font.PLAIN, 12);
-    
-    private genFondos panelFondo;
+
     public InstaProfileUI(String username) {
         this.username = username;
         setLayout(new BorderLayout());
@@ -43,15 +46,18 @@ public class InstaProfileUI extends JPanel {
         contentContainer.setBackground(COLOR_BG);
         
         contentContainer.add(crearPanelSuperior(), BorderLayout.NORTH);
-        contentContainer.add(crearPanelGrid(), BorderLayout.CENTER); 
+        
+        JPanel gridWrapper = new JPanel(new BorderLayout());
+        gridWrapper.setBackground(COLOR_BG);
+        gridWrapper.add(crearPanelGrid(), BorderLayout.NORTH);
+        
+        contentContainer.add(gridWrapper, BorderLayout.CENTER); 
         
         JScrollPane scroll = new JScrollPane(contentContainer);
         scroll.setBorder(null);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         scroll.getVerticalScrollBar().setBackground(COLOR_BG);
-        
         scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         
         add(scroll, BorderLayout.CENTER);
         
@@ -126,71 +132,181 @@ public class InstaProfileUI extends JPanel {
         gridFotos = new JPanel(new GridLayout(0, 3, 2, 2)); 
         gridFotos.setBackground(COLOR_BG);
         
-        for (int i = 0; i < 9; i++) {
-            JPanel placeholder = new JPanel(new BorderLayout());
-            placeholder.setBackground(new Color(20, 20, 20));
-            placeholder.setBorder(BorderFactory.createLineBorder(new Color(50,50,50)));
-            placeholder.setPreferredSize(new Dimension(100, 100)); 
-            
-            JLabel lbl = new JLabel("?", SwingConstants.CENTER);
-            lbl.setForeground(new Color(50, 50, 50));
-            lbl.setFont(new Font("Comic Sans MS", Font.BOLD, 30));
-            placeholder.add(lbl, BorderLayout.CENTER);
-            
-            gridFotos.add(placeholder);
-        }
+        cargarPostsEnGrid();
         
         container.add(gridFotos, BorderLayout.CENTER);
         return container;
+    }
+    
+    private void cargarPostsEnGrid() {
+        gridFotos.removeAll(); 
+        try {
+            instaManager manager = instaController.getInstance().getInsta();
+            ArrayList<String[]> posts = manager.getPosts(username);
+            
+            if (posts.isEmpty()) {
+                JLabel lblVacio = new JLabel("Nada que ver aqui...", SwingConstants.CENTER);
+                lblVacio.setForeground(Color.GRAY);
+                lblVacio.setPreferredSize(new Dimension(380, 50));
+                gridFotos.add(lblVacio);
+            } else {
+                for (int i = 0; i < posts.size(); i++) {
+                    String[] post = posts.get(i);
+                    String rutaImg = post[0];
+                    // Indice final para usar en la lambda
+                    final int index = i; 
+                    
+                    JPanel frameFoto = new JPanel(new BorderLayout());
+                    frameFoto.setBackground(new Color(20, 20, 20));
+                    frameFoto.setPreferredSize(new Dimension(130, 130)); 
+                    frameFoto.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    
+                    JLabel lblImg = new JLabel();
+                    lblImg.setHorizontalAlignment(SwingConstants.CENTER);
+                    
+                    ImageIcon icon = recortarImagenCuadrada(rutaImg, 130);
+                    if (icon != null) {
+                        lblImg.setIcon(icon);
+                    } else {
+                        lblImg.setText("?");
+                        lblImg.setForeground(Color.GRAY);
+                    }
+                    
+                    frameFoto.add(lblImg, BorderLayout.CENTER);
+                    
+                    frameFoto.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            // AQUÍ ESTÁ LA MAGIA: Pasamos toda la lista y el índice
+                            abrirPostFeed(posts, index);
+                        }
+                    });
+                    
+                    gridFotos.add(frameFoto);
+                }
+            }
+            
+        } catch (IOException e) {
+             gridFotos.add(new JLabel("Error cargando"));
+        }
+        gridFotos.revalidate();
+        gridFotos.repaint();
+    }
+    
+    private ImageIcon recortarImagenCuadrada(String ruta, int size) {
+        try {
+            File f = new File(ruta);
+            if (!f.exists()) return null;
+            ImageIcon originalIcon = new ImageIcon(ruta);
+            if (originalIcon.getIconWidth() <= 0) return null;
+
+            Image img = originalIcon.getImage();
+            BufferedImage buffered = new BufferedImage(
+                originalIcon.getIconWidth(), 
+                originalIcon.getIconHeight(), 
+                BufferedImage.TYPE_INT_ARGB
+            );
+            Graphics g = buffered.getGraphics();
+            g.drawImage(img, 0, 0, null);
+            g.dispose();
+
+            int w = buffered.getWidth();
+            int h = buffered.getHeight();
+            int cropSize = Math.min(w, h);
+            int x = (w - cropSize) / 2;
+            int y = (h - cropSize) / 2;
+
+            BufferedImage cropped = buffered.getSubimage(x, y, cropSize, cropSize);
+            Image scaled = cropped.getScaledInstance(size, size, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaled);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    private void abrirPostFeed(ArrayList<String[]> allPosts, int startIndex) {
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            JFrame frame = (JFrame) window;
+            frame.setContentPane(new InstaPostUI(this.username, allPosts, startIndex)); 
+            frame.pack();
+            frame.revalidate();
+            frame.repaint();
+        }
     }
     
     private JPanel crearBarraNavegacionInferior() {
         JPanel bar = new JPanel(new GridLayout(1, 4)); 
         bar.setBackground(new Color(20, 20, 20)); 
         bar.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, COLOR_BTN)); 
-        bar.setPreferredSize(new Dimension(400, 60));
+        bar.setPreferredSize(new Dimension(400, 60)); 
         
         bar.add(crearBotonNav("Inicio", "🏠"));
         bar.add(crearBotonNav("Buscar", "🔎"));
-        bar.add(crearBotonNav("Subir", "⬆"));
+        
+        JButton btnSubir = crearBotonNav("Subir", "⬆");
+        btnSubir.setForeground(COLOR_BTN);
+        btnSubir.addActionListener(e -> subirPost());
+        bar.add(btnSubir);
         
         JButton btnPerfil = crearBotonNav("Perfil", "👤");
-        btnPerfil.setForeground(COLOR_BTN);
+        btnPerfil.setForeground(COLOR_BTN); 
         bar.add(btnPerfil);
         
         return bar;
     }
     
+    private void subirPost() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Selecciona la evidencia");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes", "jpg", "png", "jpeg"));
+        
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            String path = selectedFile.getAbsolutePath();
+            
+            String caption = JOptionPane.showInputDialog(this, "Escribe una descripción:", "Nuevo Post", JOptionPane.PLAIN_MESSAGE);
+            if (caption == null) caption = "";
+            
+            try {
+                instaManager manager = instaController.getInstance().getInsta();
+                manager.setLoggedUser(username);
+                manager.addPost(path, username, caption);
+                
+                JOptionPane.showMessageDialog(this, "Subido con éxito.");
+                cargarPostsEnGrid(); 
+                
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error al subir: " + ex.getMessage());
+            }
+        }
+    }
+    
     private JButton crearBotonNav(String texto, String emoji) {
-        JButton btn = new JButton(texto);
-        
-
-        btn.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
-        
-        btn.setText(emoji);
-        btn.setToolTipText(texto);
+        JButton btn = new JButton(emoji);
+        btn.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20)); 
+        btn.setToolTipText(texto); 
         btn.setBackground(new Color(20, 20, 20));
         btn.setForeground(Color.GRAY);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
-        
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
     }
-
 
     private void cargarDatosPerfil() {
         try {
             instaManager manager = instaController.getInstance().getInsta();
             if (manager == null) return;
+            manager.setLoggedUser(username);
 
             String rutaFoto = manager.getProfilePic(username);
             if (rutaFoto != null && !rutaFoto.isEmpty() && !rutaFoto.equals("futura referencia de imagen aqui")) {
-                File f = new File(rutaFoto);
-                if (f.exists()) {
-                    ImageIcon icon = new ImageIcon(rutaFoto);
-                    Image img = icon.getImage().getScaledInstance(90, 90, Image.SCALE_SMOOTH);
-                    lblFoto.setIcon(new ImageIcon(img));
+                ImageIcon icon = recortarImagenCuadrada(rutaFoto, 90);
+                if (icon != null) {
+                    lblFoto.setIcon(icon);
                     lblFoto.setText("");
                 }
             }
@@ -203,10 +319,7 @@ public class InstaProfileUI extends JPanel {
             String fecha = manager.getEntryDate(username);
             String generoStr = (genero == 'M') ? "Demonio" : (genero == 'F' ? "Bruja" : "Ente");
             
-          
             lblInfo.setText("<html>Edad: " + edad + " años<br>Clase: " + generoStr + "<br>Desde: " + fecha + "</html>");
-            
-            lblStats.setText("0 Evidencias   0 Acosadores   0 Víctimas");
 
         } catch (IOException e) {
             lblName.setText("Error de conexión.");
@@ -215,7 +328,6 @@ public class InstaProfileUI extends JPanel {
 
     private void cerrarSesion() {
         Window window = SwingUtilities.getWindowAncestor(this);
-        
         if (window instanceof JFrame) {
             JFrame frame = (JFrame) window;
             frame.setContentPane(new InstaLoginUI()); 
@@ -243,18 +355,4 @@ public class InstaProfileUI extends JPanel {
         btn.setBorder(null);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
-    
-//    
-//    private JInternalFrame createLogWindow(){
-//        JInternalFrame Frame = new JInternalFrame("OUTSTAGRAM", true, true, true, true);
-//         //InstaLoginUI instaPanel = new InstaLoginUI(panelFondo);
-//         Frame.add(instaPanel, BorderLayout.CENTER);
-//         
-//         Frame.setSize(400,650);
-//         Frame.setLocation(100, 50);
-//         Frame.setVisible(true);
-//        return Frame;
-//    }
-//    
-    
 }
