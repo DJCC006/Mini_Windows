@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+
 /**
  *
  * @author esteb
@@ -25,7 +26,7 @@ public class InstaEditProfileUI extends JPanel {
     private final Font FONT_TITLE = new Font("Comic Sans MS", Font.BOLD | Font.ITALIC, 20);
     private final Font FONT_CAOS = new Font("Comic Sans MS", Font.PLAIN, 12);
 
-    // Components
+    // 
     private JToggleButton toggleBuscar;
     private JPanel panelCentral;
     private JTextField txtBuscar;
@@ -66,7 +67,6 @@ public class InstaEditProfileUI extends JPanel {
         title.setBounds(15, 10, 300, 40);
         p.add(title);
 
-        // Toggle visual entre Buscar/Entrar
         toggleBuscar = new JToggleButton("Buscar personas");
         toggleBuscar.setBounds(250, 12, 130, 30);
         estilizarToggle(toggleBuscar);
@@ -78,7 +78,6 @@ public class InstaEditProfileUI extends JPanel {
                 cl.show(panelCentral, "ENTRAR");
             }
         });
-        // por defecto seleccionado BUSCAR
         toggleBuscar.setSelected(true);
         p.add(toggleBuscar);
 
@@ -155,7 +154,6 @@ public class InstaEditProfileUI extends JPanel {
 
         p.add(top, BorderLayout.NORTH);
 
-        // Panel detalle de perfil
         panelPerfilDetalle = new JPanel();
         panelPerfilDetalle.setLayout(new BoxLayout(panelPerfilDetalle, BoxLayout.Y_AXIS));
         panelPerfilDetalle.setBackground(COLOR_BG);
@@ -200,7 +198,6 @@ public class InstaEditProfileUI extends JPanel {
         panelPerfilDetalle.add(Box.createVerticalStrut(10));
         panelPerfilDetalle.add(lblSigoDet);
 
-        // botones de acción
         JPanel pAcc = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         pAcc.setBackground(COLOR_BG);
 
@@ -258,7 +255,6 @@ public class InstaEditProfileUI extends JPanel {
         return bar;
     }
 
-    // acciones de UI --------------------------------
 
     private void ejecutarBusqueda() {
         String q = txtBuscar.getText().trim();
@@ -272,7 +268,6 @@ public class InstaEditProfileUI extends JPanel {
             } else {
                 for (String u : res) {
                     boolean sigo = false;
-                    // aseguramos que loggedUser esté seteado
                     manager.setLoggedUser(currentUser);
                     sigo = manager.isFollowing(u);
                     String linea = u + " - " + (sigo ? "LO SIGO" : "NO LO SIGO");
@@ -285,10 +280,8 @@ public class InstaEditProfileUI extends JPanel {
     }
 
     private void abrirPerfilDesdeBusqueda(String linea) {
-        // linea puede ser "username - ...", extraer el username
         String username = linea.split(" - ")[0];
         txtEntrar.setText(username);
-        // cambiar toggle a ENTRAR (desactivar el toggle)
         toggleBuscar.setSelected(false);
         CardLayout cl = (CardLayout) panelCentral.getLayout();
         cl.show(panelCentral, "ENTRAR");
@@ -305,13 +298,11 @@ public class InstaEditProfileUI extends JPanel {
             instaManager manager = instaController.getInstance().getInsta();
             if (manager == null) return;
 
-            // comprobar existencia
             if (!manager.checkUserExistance(target)) {
                 JOptionPane.showMessageDialog(this, "Ese usuario no existe o está desactivado.");
                 return;
             }
 
-            // cargar datos generales
             String realName = manager.getRealName(target);
             char g = manager.getGender(target);
             int age = manager.getAge(target);
@@ -323,13 +314,11 @@ public class InstaEditProfileUI extends JPanel {
             lblEdadDet.setText("Edad: " + age);
             lblIngresoDet.setText("Desde: " + (date != null ? date : "Desconocido"));
 
-            // followers / following
             int followers = manager.getFollowersCount(target);
             int following = manager.getFollowingCount(target);
             lblFollowersDet.setText("Followers: " + followers);
             lblFollowingDet.setText("Following: " + following);
 
-            // sigo o no
             manager.setLoggedUser(currentUser);
             boolean sigo = manager.isFollowing(target);
             lblSigoDet.setText("Estado: " + (sigo ? "LO SIGO" : "NO LO SIGO"));
@@ -363,7 +352,6 @@ public class InstaEditProfileUI extends JPanel {
                     JOptionPane.showMessageDialog(this, "Has dejado de seguir a " + target);
                 }
             }
-            // refrescar detalles
             buscarYMostrarPerfil();
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Error follow: " + ex.getMessage());
@@ -376,7 +364,6 @@ public class InstaEditProfileUI extends JPanel {
         try {
             instaManager manager = instaController.getInstance().getInsta();
             ArrayList<String[]> posts = manager.getPosts(target);
-            // construir cadena de todos los posts (más reciente primero ya lo hace getPosts)
             if (posts.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "No hay tweets/post de " + target);
             } else {
@@ -396,10 +383,8 @@ public class InstaEditProfileUI extends JPanel {
                 sp.setPreferredSize(new Dimension(380, 400));
                 JOptionPane.showMessageDialog(this, sp, "Tweets de " + target, JOptionPane.PLAIN_MESSAGE);
 
-                // opción para "Entrar al perfil" desde aquí:
                 int entrar = JOptionPane.showConfirmDialog(this, "¿Entrar al perfil de " + target + "?", "Ir al perfil", JOptionPane.YES_NO_OPTION);
                 if (entrar == JOptionPane.YES_OPTION) {
-                    // Abrir perfil completo (ir a InstaProfileUI)
                     Window window = SwingUtilities.getWindowAncestor(this);
                     if (window instanceof JFrame) {
                         JFrame frame = (JFrame) window;
@@ -420,7 +405,6 @@ public class InstaEditProfileUI extends JPanel {
         try {
             instaManager manager = instaController.getInstance().getInsta();
             if (manager == null) return;
-            // saber estado actual
             boolean estado = manager.getStatusUser(currentUser);
             if (estado) {
                 int resp = JOptionPane.showConfirmDialog(this, "¿Deseas desactivar tu cuenta? (se ocultará de búsquedas)", "Confirmar", JOptionPane.YES_NO_OPTION);
@@ -429,7 +413,6 @@ public class InstaEditProfileUI extends JPanel {
                     JOptionPane.showMessageDialog(this, "Cuenta desactivada.");
                 }
             } else {
-                // si está desactivada, la activamos sin preguntar según requerimiento
                 boolean ok = manager.activateUser(currentUser);
                 if (ok) {
                     JOptionPane.showMessageDialog(this, "Cuenta reactivada.");
@@ -442,7 +425,6 @@ public class InstaEditProfileUI extends JPanel {
         }
     }
 
-    // utilidades estéticas --------------------------
     private void estilizarCampo(JTextField txt) {
         txt.setBackground(new Color(30, 30, 30));
         txt.setForeground(COLOR_TEXT);
