@@ -122,7 +122,7 @@ public class Escritorio {
         
         
         //Creacion de opcion si es admin
-        if(UserLogged.getInstance().getUserLogged().getName().equals("ADMIN")){
+        if(UserLogged.getInstance().getUserLogged().getName().equals("ADMIN2")){
             JMenuItem managerOption= new JMenuItem("Gestionar Usuarios");
             managerOption.addActionListener(e -> {
                 JInternalFrame newfGestor = createGestorWindow();

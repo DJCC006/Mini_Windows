@@ -108,11 +108,19 @@ public class LogInWindow  extends sesionManager{
          char[] tempPass = psswordfield.getPassword();
          String passwordString = new String(tempPass);
          
+         if(sesionManager.LogIn2(username, passwordString, psswordfield, screen)){
+             screen.dispose();
+             Escritorio ventana = new Escritorio();
+         }
+         
+         
+         /*
           if(sesionManager.LogIn(username, passwordString, psswordfield, screen)){
               screen.dispose();
               Escritorio ventana = new Escritorio();
                   
         }
+*/
     }
             
     
