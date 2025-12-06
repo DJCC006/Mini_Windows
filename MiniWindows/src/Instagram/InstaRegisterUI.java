@@ -222,7 +222,7 @@ public class InstaRegisterUI extends JPanel {
                 return;
             }
 
-            manager.addNewUser(nombre, genero, username, password, edad);
+            manager.addNewUser(nombre, genero, username, password, edad, rutaFotoSeleccionada);
 
             JOptionPane.showMessageDialog(this, "¡Bienvenido a la legión! Tu alma es nuestra.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
 
