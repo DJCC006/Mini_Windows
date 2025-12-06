@@ -46,8 +46,8 @@ import javax.swing.tree.DefaultTreeModel;
  */
 public class fileExplorer extends JPanel{
     private static String userName=UserLogged.getInstance().getUserLogged().getName();
-    private static final String raizUsuario = "src\\Z\\Usuarios\\"+userName+"\\";
-    private static final String recycleBin = raizUsuario+"Papelera";
+    private   String raizUsuario =""; //"src\\Z\\Usuarios\\"+userName+"\\"
+    private  String recycleBin="";
     private genFondos panelFondo;
     
     
@@ -84,6 +84,13 @@ public class fileExplorer extends JPanel{
     public fileExplorer(genFondos panelFondo){
         setLayout(new BorderLayout(5,5));
         this.panelFondo=panelFondo;
+        
+        
+        //Creacion de rutas dinamicas
+         raizUsuario =getRutaCondicionada();
+         recycleBin= raizUsuario+"Papelera";
+        
+        
         
         
         File papelera = new File(recycleBin);
@@ -134,6 +141,21 @@ public class fileExplorer extends JPanel{
         }
         */
         
+    }
+    
+    
+    
+    private String getRutaCondicionada(){
+        String rutaUsuarios = "src\\Z\\Usuarios";
+        
+        String nameActual = UserLogged.getInstance().getUserLogged().getName();
+        
+        if(UserLogged.getInstance().getUserLogged().isAdmin()){
+            return rutaUsuarios;
+        }else{
+            String userroot = rutaUsuarios+"\\"+nameActual+"\\";
+            return userroot;
+        }
     }
     
     
@@ -586,12 +608,27 @@ public class fileExplorer extends JPanel{
         File parentFile = (File) parentNode.getUserObject();
         File[] children = parentFile.listFiles(File::isDirectory);
         
+        String currentusername = UserLogged.getInstance().getUserLogged().getName();
+        
+        
         if(children != null){
             Arrays.sort(children, Comparator.comparing(File::getName)); //posiblemente quitar esto para dejarlo a merced de usuario
             
             for(File child: children){
                 
                 if(child.getAbsolutePath().equals(recycleBin))continue;
+                
+                
+                //revision para evitar duplicados
+                if(!UserLogged.getInstance().getUserLogged().isAdmin() &&
+                   !child.getAbsolutePath().equalsIgnoreCase(parentFile.getAbsolutePath()) &&
+                   !child.getName().equalsIgnoreCase(currentusername)){
+                    if(parentFile.getName().equalsIgnoreCase("Usuarios") && !child.getName().equalsIgnoreCase(currentusername)){
+                        continue;
+                    }
+                }
+                
+                
                 
                 DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
                 

@@ -20,7 +20,7 @@ public class UserUtilities {
     public UserUtilities(String name, String password){
         this.name=name;
         this.password=password;
-        status=true;
+        this.status=status;
         UserRoute="src\\Z\\Usuarios\\"+name;
         UserMainDir = new File(UserRoute);
     }
@@ -60,6 +60,15 @@ public class UserUtilities {
     public String getUserRoute(){
         return UserRoute;
     }
+    
+    public boolean isAdmin(){
+        if(this.name.equalsIgnoreCase("ADMIN") || this.name.equalsIgnoreCase("ADMIN2")){
+            return true;
+        }
+        return false;
+    }
+            
+    
     
     public void createInitUserDir() throws IOException{
         File userFile = new File(UserRoute);

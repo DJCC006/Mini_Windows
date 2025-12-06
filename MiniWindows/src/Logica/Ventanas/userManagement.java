@@ -5,6 +5,7 @@
 package Logica.Ventanas;
 
 import Logica.ManejoUsuarios.User;
+import Logica.ManejoUsuarios.UserManager;
 import Logica.ManejoUsuarios.UsuariosControlador;
 import Logica.ManejoUsuarios.sesionManager;
 import java.awt.BorderLayout;
@@ -46,20 +47,38 @@ public class userManagement extends JPanel {
            String name= JOptionPane.showInputDialog(null, "Ingrese el nombre del nuevo usuario: ");
            String pass = JOptionPane.showInputDialog(null, "Ingrese contraseña para nuevo usuario: ");
            
-           boolean verName= sesionManager.userCheck(name);
+           boolean verName=false;
+           try{
+                verName=UserManager.checkUsername(name);//sesionManager.userCheck(name);
+           }catch(IOException e2){
+               System.out.println("Erorr al checar el nombre");
+           }
+           
            boolean verPass = sesionManager.passwordCheck(pass);
            
            if(verName!=true && verPass!= true){
                JOptionPane.showMessageDialog(null, "No se pudo crear nuevo usuario");
            }else{
+               
+               try{
+                 UserManager.addUser(name, pass);
+                 JOptionPane.showMessageDialog(null, "Usuario Creado Exitosamente");
+               }catch(IOException e2){
+                   System.out.println("Erro a la hora de crear usuario extra");
+               }
+                
+               
+           
+           /*
                User nuevoUsuario = new User(name, pass);
                try{
                   nuevoUsuario.createInitUserDir();
                   nuevoUsuario.createInicialDirs();
                   UsuariosControlador.getInstance().getUsuarios().add(nuevoUsuario);
-                  JOptionPane.showMessageDialog(null, "Usuario Creado Exitosamente");
+                  
                }catch(IOException a){   
                }
+*/
            }
            
            

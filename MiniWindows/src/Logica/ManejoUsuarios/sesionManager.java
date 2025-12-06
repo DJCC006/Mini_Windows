@@ -4,6 +4,7 @@
  */
 package Logica.ManejoUsuarios;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -48,6 +49,46 @@ public class sesionManager {
         
         return false;
     }
+    
+    
+    public static boolean LogIn2(String name, String password, JPasswordField passwordfield, JFrame screen){
+        
+        try{
+            boolean statusUser= UserManager.getStatus(name);
+            //check existencia de usuario
+            if(statusUser){
+                //check si el nombre coincide
+                String nameUser = UserManager.getName(name);
+                
+                //aparte de decirnos que si se encuentra ese nombre de usuario, nos enseña que en efecto si se encuentra en la lista
+                if(nameUser!=null){
+                    String pass= UserManager.getPass(nameUser);
+                    
+                    //check de constrasenia
+                    if(pass.equals(password)){
+                        
+                        //Creacion de mecanica de clase auxiliar para mantener informacion de usuario logeado
+                        User logged= new User(nameUser, pass);
+                        UserLogged.getInstance().setUserLogged(logged);
+                        System.out.println("Iniciando Sesion como: "+nameUser);
+                        return true;
+                    }else{
+                        JOptionPane.showMessageDialog(screen, "Contraseña incorrecta");
+                    }   
+                }else{
+                    JOptionPane.showMessageDialog(screen, "NOMBRE DE USUARIO NO ENCONTRADO");
+                }   
+            }else{
+                JOptionPane.showMessageDialog(screen, "USUARIO NO EXISTE");
+            }
+        }catch(IOException e){
+            System.out.println("Excepcion en login 2");
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
     
     
     public static boolean passwordCheck(JPasswordField passwordfield){
