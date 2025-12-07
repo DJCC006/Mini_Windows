@@ -5,13 +5,12 @@
 package Instagram;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -23,6 +22,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class InstaProfileUI extends JPanel {
 
     private final String username;
+    private final String viewer;
     private JLabel lblFoto;
     private JLabel lblName;
     private JLabel lblInfo;
@@ -36,9 +36,14 @@ public class InstaProfileUI extends JPanel {
     private final Font FONT_TEXT = new Font("Comic Sans MS", Font.PLAIN, 12);
 
     public InstaProfileUI(String username) {
-        this.username = username;
-        setLayout(new BorderLayout());
+        this(username, username);
+    }
 
+    public InstaProfileUI(String username, String viewer) {
+        this.username = username;
+        this.viewer = viewer != null ? viewer : username;
+
+        setLayout(new BorderLayout());
         setPreferredSize(new Dimension(400, 650));
         setBackground(COLOR_BG);
 
@@ -72,16 +77,40 @@ public class InstaProfileUI extends JPanel {
         panel.setPreferredSize(new Dimension(400, 260));
         panel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, COLOR_BORDER));
 
-        JButton btnLogout = new JButton("Huir");
-        btnLogout.setBounds(310, 10, 70, 25);
-        estilizarBotonPequeno(btnLogout);
-        btnLogout.addActionListener(e -> cerrarSesion());
-        panel.add(btnLogout);
+        if (!viewer.equals(username)) {
+            JLabel lblBack = new JLabel("←  Volver");
+            lblBack.setForeground(COLOR_BTN);
+            lblBack.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            lblBack.setBounds(10, 10, 120, 30);
+            lblBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            lblBack.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    Window window = SwingUtilities.getWindowAncestor(InstaProfileUI.this);
+                    if (window instanceof JFrame) {
+                        JFrame frame = (JFrame) window;
+                        frame.setContentPane(new InstaEditProfileUI(viewer));
+                        frame.pack();
+                        frame.setLocationRelativeTo(null);
+                        frame.revalidate();
+                        frame.repaint();
+                    }
+                }
+            });
+            panel.add(lblBack);
+        } else {
+            JButton btnLogout = new JButton("Huir");
+            btnLogout.setBounds(310, 10, 70, 25);
+            estilizarBotonPequeno(btnLogout);
+            btnLogout.addActionListener(e -> cerrarSesion());
+            panel.add(btnLogout);
+        }
 
+        int titleX = viewer.equals(username) ? 15 : 60;
         JLabel lblTitle = new JLabel("@" + username);
         lblTitle.setFont(new Font("Comic Sans MS", Font.BOLD | Font.ITALIC, 20));
         lblTitle.setForeground(COLOR_TEXT);
-        lblTitle.setBounds(15, 10, 250, 30);
+        lblTitle.setBounds(titleX, 10, 250, 30);
         panel.add(lblTitle);
 
         lblFoto = new JLabel("Sin Rostro");
@@ -98,22 +127,92 @@ public class InstaProfileUI extends JPanel {
         lblStats.setBounds(120, 50, 260, 60);
         panel.add(lblStats);
 
-        JButton btnEdit = new JButton("Alterar Realidad");
-        btnEdit.setBounds(130, 110, 240, 30);
-        btnEdit.addActionListener(e -> {
-            Window window = SwingUtilities.getWindowAncestor(this);
-            if (window instanceof JFrame) {
-                JFrame frame = (JFrame) window;
-                frame.setContentPane(new InstaEditProfileUI(username));
-                frame.pack();
-                frame.setLocationRelativeTo(null);
-                frame.revalidate();
-                frame.repaint();
-            }
-        });
+        if (viewer.equals(username)) {
+            JButton btnEdit = new JButton("Alterar Realidad");
+            btnEdit.setBounds(130, 110, 240, 30);
+            estilizarBoton(btnEdit);
+            btnEdit.addActionListener(e -> {
+                Window window = SwingUtilities.getWindowAncestor(InstaProfileUI.this);
+                if (window instanceof JFrame) {
+                    JFrame frame = (JFrame) window;
+                    frame.setContentPane(new InstaEditProfileUI(username));
+                    frame.pack();
+                    frame.setLocationRelativeTo(null);
+                    frame.revalidate();
+                    frame.repaint();
+                }
+            });
+            panel.add(btnEdit);
+        } else {
+            JButton btnFollow = new JButton("Seguir");
+            btnFollow.setBounds(130, 110, 110, 30);
+            estilizarBoton(btnFollow);
+            panel.add(btnFollow);
 
-        estilizarBoton(btnEdit);
-        panel.add(btnEdit);
+            JButton btnVerTweets = new JButton("Ver Tweets");
+            btnVerTweets.setBounds(250, 110, 120, 30);
+            estilizarBoton(btnVerTweets);
+            panel.add(btnVerTweets);
+
+            btnFollow.addActionListener(e -> {
+                try {
+                    instaManager manager = instaController.getInstance().getInsta();
+                    if (manager == null) {
+                        return;
+                    }
+                    manager.setLoggedUser(viewer);
+                    boolean sigo = manager.isFollowing(username);
+                    if (!sigo) {
+                        boolean ok = manager.addFollow(username);
+                        if (ok) {
+                            JOptionPane.showMessageDialog(this, "Ahora sigues a " + username);
+                        } else {
+                            JOptionPane.showMessageDialog(this, "No se pudo seguir.");
+                        }
+                    } else {
+                        int resp = JOptionPane.showConfirmDialog(this, "¿Dejar de seguir a " + username + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+                        if (resp == JOptionPane.YES_OPTION) {
+                            manager.quitarFollow(username);
+                            JOptionPane.showMessageDialog(this, "Has dejado de seguir a " + username);
+                        }
+                    }
+                    cargarDatosPerfil();
+                    cargarPostsEnGrid();
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this, "Error follow: " + ex.getMessage());
+                }
+            });
+
+            btnVerTweets.addActionListener(e -> {
+                try {
+                    instaManager manager = instaController.getInstance().getInsta();
+                    if (manager == null) {
+                        return;
+                    }
+                    ArrayList<String[]> posts = manager.getPosts(username);
+                    if (posts.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "No hay tweets/post de " + username);
+                    } else {
+                        StringBuilder sb = new StringBuilder();
+                        for (String[] p : posts) {
+                            String autor = (p.length > 1) ? p[1] : "(?)";
+                            String fecha = (p.length > 2) ? p[2] : "(fecha)";
+                            String contenido = (p.length > 3) ? p[3] : "";
+                            sb.append(autor).append(": '").append(contenido).append("'   [").append(fecha).append("]\n\n");
+                        }
+                        JTextArea area = new JTextArea(sb.toString());
+                        area.setEditable(false);
+                        area.setBackground(new Color(20, 20, 20));
+                        area.setForeground(Color.WHITE);
+                        JScrollPane sp = new JScrollPane(area);
+                        sp.setPreferredSize(new Dimension(380, 400));
+                        JOptionPane.showMessageDialog(this, sp, "Tweets de " + username, JOptionPane.PLAIN_MESSAGE);
+                    }
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this, "Error cargando tweets: " + ex.getMessage());
+                }
+            });
+        }
 
         lblName = new JLabel("Cargando nombre...");
         lblName.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
@@ -156,7 +255,7 @@ public class InstaProfileUI extends JPanel {
             instaManager manager = instaController.getInstance().getInsta();
             ArrayList<String[]> posts = manager.getPosts(username);
 
-            if (posts.isEmpty()) {
+            if (posts == null || posts.isEmpty()) {
                 JLabel lblVacio = new JLabel("Nada que ver aqui...", SwingConstants.CENTER);
                 lblVacio.setForeground(Color.GRAY);
                 lblVacio.setPreferredSize(new Dimension(380, 50));
@@ -164,8 +263,7 @@ public class InstaProfileUI extends JPanel {
             } else {
                 for (int i = 0; i < posts.size(); i++) {
                     String[] post = posts.get(i);
-                    String rutaImg = post[0];
-                    // Indice final para usar en la lambda
+                    String rutaImg = post.length > 0 ? post[0] : "";
                     final int index = i;
 
                     JPanel frameFoto = new JPanel(new BorderLayout());
@@ -189,15 +287,36 @@ public class InstaProfileUI extends JPanel {
                     frameFoto.addMouseListener(new MouseAdapter() {
                         @Override
                         public void mouseClicked(MouseEvent e) {
-                            // AQUÍ ESTÁ LA MAGIA: Pasamos toda la lista y el índice
-                            abrirPostFeed(posts, index);
+                            Window window = SwingUtilities.getWindowAncestor(InstaProfileUI.this);
+                            if (window instanceof JFrame) {
+                                JFrame frame = (JFrame) window;
+                                try {
+                                    instaManager manager = instaController.getInstance().getInsta();
+                                    ArrayList<String[]> allPosts = manager.getPosts(username);
+
+                                    Runnable backAction = () -> {
+                                        frame.setContentPane(InstaProfileUI.this);
+                                        frame.pack();
+                                        frame.setLocationRelativeTo(null);
+                                        frame.revalidate();
+                                        frame.repaint();
+                                    };
+
+                                    InstaPostUI postUI = new InstaPostUI(viewer, allPosts, index, backAction);
+                                    frame.setContentPane(postUI);
+                                    frame.pack();
+                                    frame.revalidate();
+                                    frame.repaint();
+                                } catch (IOException ex) {
+                                    JOptionPane.showMessageDialog(InstaProfileUI.this, "Error abriendo post: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
                         }
                     });
 
                     gridFotos.add(frameFoto);
                 }
             }
-
         } catch (IOException e) {
             gridFotos.add(new JLabel("Error cargando"));
         }
@@ -244,7 +363,17 @@ public class InstaProfileUI extends JPanel {
         Window window = SwingUtilities.getWindowAncestor(this);
         if (window instanceof JFrame) {
             JFrame frame = (JFrame) window;
-            frame.setContentPane(new InstaPostUI(this.username, allPosts, startIndex));
+
+            Runnable backAction = () -> {
+                frame.setContentPane(InstaProfileUI.this);
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.revalidate();
+                frame.repaint();
+            };
+
+            InstaPostUI postUI = new InstaPostUI(viewer, allPosts, startIndex, backAction);
+            frame.setContentPane(postUI);
             frame.pack();
             frame.revalidate();
             frame.repaint();
@@ -257,8 +386,35 @@ public class InstaProfileUI extends JPanel {
         bar.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, COLOR_BTN));
         bar.setPreferredSize(new Dimension(400, 60));
 
-        bar.add(crearBotonNav("Inicio", "🏠"));
-        bar.add(crearBotonNav("Buscar", "🔎"));
+        JButton btnInicio = crearBotonNav("Inicio", "🏠");
+        btnInicio.setForeground(COLOR_BTN);
+        btnInicio.addActionListener(e -> {
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window instanceof JFrame) {
+                JFrame frame = (JFrame) window;
+                frame.setContentPane(new InteractionsUI(viewer));
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.revalidate();
+                frame.repaint();
+            }
+        });
+        bar.add(btnInicio);
+
+        JButton btnBuscar = crearBotonNav("Buscar", "🔎");
+        btnBuscar.setForeground(COLOR_BTN);
+        btnBuscar.addActionListener(e -> {
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window instanceof JFrame) {
+                JFrame frame = (JFrame) window;
+                frame.setContentPane(new HashtagSearchUI(viewer));
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.revalidate();
+                frame.repaint();
+            }
+        });
+        bar.add(btnBuscar);
 
         JButton btnSubir = crearBotonNav("Subir", "⬆");
         btnSubir.setForeground(COLOR_BTN);
@@ -267,6 +423,17 @@ public class InstaProfileUI extends JPanel {
 
         JButton btnPerfil = crearBotonNav("Perfil", "👤");
         btnPerfil.setForeground(COLOR_BTN);
+        btnPerfil.addActionListener(e -> {
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window instanceof JFrame) {
+                JFrame frame = (JFrame) window;
+                frame.setContentPane(new InstaProfileUI(viewer));
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.revalidate();
+                frame.repaint();
+            }
+        });
         bar.add(btnPerfil);
 
         return bar;
@@ -293,6 +460,7 @@ public class InstaProfileUI extends JPanel {
                 manager.addPost(path, username, caption);
 
                 JOptionPane.showMessageDialog(this, "Subido con éxito.");
+                cargarDatosPerfil();
                 cargarPostsEnGrid();
 
             } catch (IOException ex) {
@@ -320,7 +488,6 @@ public class InstaProfileUI extends JPanel {
             if (manager == null) {
                 return;
             }
-            manager.setLoggedUser(username);
 
             String rutaFoto = manager.getProfilePic(username);
             if (rutaFoto != null && !rutaFoto.isEmpty() && !rutaFoto.equals("futura referencia de imagen aqui")) {
@@ -328,7 +495,13 @@ public class InstaProfileUI extends JPanel {
                 if (icon != null) {
                     lblFoto.setIcon(icon);
                     lblFoto.setText("");
+                } else {
+                    lblFoto.setIcon(null);
+                    lblFoto.setText("Sin Rostro");
                 }
+            } else {
+                lblFoto.setIcon(null);
+                lblFoto.setText("Sin Rostro");
             }
 
             String realName = manager.getRealName(username);
@@ -340,6 +513,15 @@ public class InstaProfileUI extends JPanel {
             String generoStr = (genero == 'M') ? "Demonio" : (genero == 'F' ? "Bruja" : "Ente");
 
             lblInfo.setText("<html>Edad: " + edad + " años<br>Clase: " + generoStr + "<br>Desde: " + fecha + "</html>");
+
+            ArrayList<String[]> posts = manager.getPosts(username);
+            int evidencias = (posts == null) ? 0 : posts.size();
+
+            int acosadores = manager.getFollowersCount(username);
+
+            int victimas = manager.getFollowingCount(username);
+
+            lblStats.setText(evidencias + " Evidencias   " + acosadores + " Acosadores   " + victimas + " Víctimas");
 
         } catch (IOException e) {
             lblName.setText("Error de conexión.");

@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Instagram;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -15,10 +16,10 @@ import javax.swing.border.LineBorder;
  *
  * @author esteb
  */
-
 public class InstaEditProfileUI extends JPanel {
 
     private final String currentUser;
+
     private final Color COLOR_BG = Color.BLACK;
     private final Color COLOR_BTN = new Color(255, 69, 0);
     private final Color COLOR_TEXT = Color.WHITE;
@@ -26,25 +27,23 @@ public class InstaEditProfileUI extends JPanel {
     private final Font FONT_TITLE = new Font("Comic Sans MS", Font.BOLD | Font.ITALIC, 20);
     private final Font FONT_CAOS = new Font("Comic Sans MS", Font.PLAIN, 12);
 
-    // 
-    private JToggleButton toggleBuscar;
     private JPanel panelCentral;
     private JTextField txtBuscar;
     private DefaultListModel<String> listModel;
     private JList<String> resultList;
+
     private JTextField txtEntrar;
-    private JPanel panelPerfilDetalle;
-    private JLabel lblNombreDet, lblGeneroDet, lblEdadDet, lblIngresoDet, lblFollowersDet, lblFollowingDet, lblSigoDet;
-    private JButton btnFollowToggle, btnVerTweets;
     private JButton btnToggleCuenta;
 
     public InstaEditProfileUI(String currentUser) {
         this.currentUser = currentUser;
+
         setLayout(new BorderLayout());
         setBackground(COLOR_BG);
         setPreferredSize(new Dimension(400, 650));
 
         add(crearHeader(), BorderLayout.NORTH);
+
         panelCentral = new JPanel(new CardLayout());
         panelCentral.setBackground(COLOR_BG);
 
@@ -61,25 +60,24 @@ public class InstaEditProfileUI extends JPanel {
         p.setPreferredSize(new Dimension(400, 60));
         p.setBackground(COLOR_BG);
 
-        JLabel title = new JLabel("Editar Perfil");
-        title.setFont(FONT_TITLE);
-        title.setForeground(COLOR_TEXT);
-        title.setBounds(15, 10, 300, 40);
-        p.add(title);
-
-        toggleBuscar = new JToggleButton("Buscar personas");
-        toggleBuscar.setBounds(250, 12, 130, 30);
-        estilizarToggle(toggleBuscar);
-        toggleBuscar.addActionListener(e -> {
-            CardLayout cl = (CardLayout) panelCentral.getLayout();
-            if (toggleBuscar.isSelected()) {
-                cl.show(panelCentral, "BUSCAR");
-            } else {
-                cl.show(panelCentral, "ENTRAR");
+        JLabel lblBack = new JLabel("←");
+        lblBack.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblBack.setForeground(COLOR_BTN);
+        lblBack.setBounds(10, 12, 30, 30);
+        lblBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblBack.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                volverAlPerfilPropio();
             }
         });
-        toggleBuscar.setSelected(true);
-        p.add(toggleBuscar);
+        p.add(lblBack);
+
+        JLabel title = new JLabel("Alterar Realidad");
+        title.setFont(FONT_TITLE);
+        title.setForeground(COLOR_TEXT);
+        title.setBounds(50, 10, 300, 40);
+        p.add(title);
 
         return p;
     }
@@ -96,6 +94,7 @@ public class InstaEditProfileUI extends JPanel {
         txtBuscar = new JTextField();
         txtBuscar.setBounds(10, 10, 260, 40);
         estilizarCampo(txtBuscar);
+        txtBuscar.addActionListener(e -> ejecutarBusqueda());
         arriba.add(txtBuscar);
 
         JButton btnBuscar = new JButton("Buscar");
@@ -116,19 +115,20 @@ public class InstaEditProfileUI extends JPanel {
         JScrollPane sp = new JScrollPane(resultList);
         sp.setBorder(null);
 
-        // doble click -> abrir perfil
         resultList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
                     String sel = resultList.getSelectedValue();
-                    if (sel != null) abrirPerfilDesdeBusqueda(sel);
+                    if (sel != null && !sel.equals("No se encontraron usuarios")) {
+                        String username = sel.split(" - ")[0];
+                        abrirPerfilExternoconRetroceso(username);
+                    }
                 }
             }
         });
 
         p.add(sp, BorderLayout.CENTER);
-
         return p;
     }
 
@@ -142,79 +142,29 @@ public class InstaEditProfileUI extends JPanel {
         top.setBackground(COLOR_BG);
 
         txtEntrar = new JTextField();
-        txtEntrar.setBounds(10, 10, 260, 40);
+        txtEntrar.setBounds(10, 10, 360, 40);
         estilizarCampo(txtEntrar);
+        txtEntrar.addActionListener(e -> {
+            String target = txtEntrar.getText().trim();
+            if (!target.isEmpty()) {
+                abrirPerfilExternoconRetroceso(target);
+            }
+        });
         top.add(txtEntrar);
-
-        JButton btnEntrar = new JButton("Entrar");
-        btnEntrar.setBounds(280, 10, 90, 40);
-        estilizarBoton(btnEntrar);
-        btnEntrar.addActionListener(e -> buscarYMostrarPerfil());
-        top.add(btnEntrar);
 
         p.add(top, BorderLayout.NORTH);
 
-        panelPerfilDetalle = new JPanel();
-        panelPerfilDetalle.setLayout(new BoxLayout(panelPerfilDetalle, BoxLayout.Y_AXIS));
-        panelPerfilDetalle.setBackground(COLOR_BG);
-        panelPerfilDetalle.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JPanel infoHolder = new JPanel();
+        infoHolder.setLayout(new BoxLayout(infoHolder, BoxLayout.Y_AXIS));
+        infoHolder.setBackground(COLOR_BG);
+        infoHolder.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        lblNombreDet = new JLabel("Nombre: ");
-        lblNombreDet.setForeground(COLOR_TEXT);
-        lblNombreDet.setFont(FONT_CAOS);
+        JLabel hint = new JLabel("Escribe un username y presiona Enter para ir al perfil.");
+        hint.setForeground(Color.LIGHT_GRAY);
+        hint.setFont(FONT_CAOS);
+        infoHolder.add(hint);
 
-        lblGeneroDet = new JLabel("Genero: ");
-        lblGeneroDet.setForeground(Color.LIGHT_GRAY);
-        lblGeneroDet.setFont(FONT_CAOS);
-
-        lblEdadDet = new JLabel("Edad: ");
-        lblEdadDet.setForeground(Color.LIGHT_GRAY);
-        lblEdadDet.setFont(FONT_CAOS);
-
-        lblIngresoDet = new JLabel("Desde: ");
-        lblIngresoDet.setForeground(Color.LIGHT_GRAY);
-        lblIngresoDet.setFont(FONT_CAOS);
-
-        lblFollowersDet = new JLabel("Followers: 0");
-        lblFollowersDet.setForeground(COLOR_TEXT);
-        lblFollowersDet.setFont(FONT_CAOS);
-
-        lblFollowingDet = new JLabel("Following: 0");
-        lblFollowingDet.setForeground(COLOR_TEXT);
-        lblFollowingDet.setFont(FONT_CAOS);
-
-        lblSigoDet = new JLabel("Estado: -");
-        lblSigoDet.setForeground(COLOR_TEXT);
-        lblSigoDet.setFont(FONT_CAOS);
-
-        panelPerfilDetalle.add(lblNombreDet);
-        panelPerfilDetalle.add(Box.createVerticalStrut(6));
-        panelPerfilDetalle.add(lblGeneroDet);
-        panelPerfilDetalle.add(lblEdadDet);
-        panelPerfilDetalle.add(lblIngresoDet);
-        panelPerfilDetalle.add(Box.createVerticalStrut(10));
-        panelPerfilDetalle.add(lblFollowersDet);
-        panelPerfilDetalle.add(lblFollowingDet);
-        panelPerfilDetalle.add(Box.createVerticalStrut(10));
-        panelPerfilDetalle.add(lblSigoDet);
-
-        JPanel pAcc = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        pAcc.setBackground(COLOR_BG);
-
-        btnFollowToggle = new JButton("Seguir");
-        estilizarBoton(btnFollowToggle);
-        btnFollowToggle.addActionListener(e -> accionFollowToggle());
-        pAcc.add(btnFollowToggle);
-
-        btnVerTweets = new JButton("Ver sus Tweets");
-        estilizarBoton(btnVerTweets);
-        btnVerTweets.addActionListener(e -> verTweetsDelPerfil());
-        pAcc.add(btnVerTweets);
-
-        panelPerfilDetalle.add(Box.createVerticalStrut(12));
-        panelPerfilDetalle.add(pAcc);
-
-        p.add(panelPerfilDetalle, BorderLayout.CENTER);
+        p.add(infoHolder, BorderLayout.CENTER);
 
         return p;
     }
@@ -262,142 +212,54 @@ public class InstaEditProfileUI extends JPanel {
         try {
             instaManager manager = instaController.getInstance().getInsta();
             if (manager == null) return;
+
             ArrayList<String> res = manager.searchUsers(q);
-            if (res.isEmpty()) {
+            if (res == null || res.isEmpty()) {
                 listModel.addElement("No se encontraron usuarios");
-            } else {
-                for (String u : res) {
-                    boolean sigo = false;
-                    manager.setLoggedUser(currentUser);
-                    sigo = manager.isFollowing(u);
-                    String linea = u + " - " + (sigo ? "LO SIGO" : "NO LO SIGO");
-                    listModel.addElement(linea);
-                }
-            }
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error buscando: " + ex.getMessage());
-        }
-    }
-
-    private void abrirPerfilDesdeBusqueda(String linea) {
-        String username = linea.split(" - ")[0];
-        txtEntrar.setText(username);
-        toggleBuscar.setSelected(false);
-        CardLayout cl = (CardLayout) panelCentral.getLayout();
-        cl.show(panelCentral, "ENTRAR");
-        buscarYMostrarPerfil();
-    }
-
-    private void buscarYMostrarPerfil() {
-        String target = txtEntrar.getText().trim();
-        if (target.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Escribe un username para buscar.");
-            return;
-        }
-        try {
-            instaManager manager = instaController.getInstance().getInsta();
-            if (manager == null) return;
-
-            if (!manager.checkUserExistance(target)) {
-                JOptionPane.showMessageDialog(this, "Ese usuario no existe o está desactivado.");
                 return;
             }
 
-            String realName = manager.getRealName(target);
-            char g = manager.getGender(target);
-            int age = manager.getAge(target);
-            String date = manager.getEntryDate(target);
-            String genTxt = (g == 'M') ? "Demonio" : (g == 'F' ? "Bruja" : "Ente");
+            for (String u : res) {
+                if (u.equalsIgnoreCase(currentUser)) continue;
 
-            lblNombreDet.setText("Nombre: " + (realName != null ? realName : target));
-            lblGeneroDet.setText("Genero: " + genTxt);
-            lblEdadDet.setText("Edad: " + age);
-            lblIngresoDet.setText("Desde: " + (date != null ? date : "Desconocido"));
+                manager.setLoggedUser(currentUser);
+                boolean sigo = manager.isFollowing(u);
+                String linea = u + " - " + (sigo ? "LO SIGO" : "NO LO SIGO");
+                listModel.addElement(linea);
+            }
 
-            int followers = manager.getFollowersCount(target);
-            int following = manager.getFollowingCount(target);
-            lblFollowersDet.setText("Followers: " + followers);
-            lblFollowingDet.setText("Following: " + following);
-
-            manager.setLoggedUser(currentUser);
-            boolean sigo = manager.isFollowing(target);
-            lblSigoDet.setText("Estado: " + (sigo ? "LO SIGO" : "NO LO SIGO"));
-            btnFollowToggle.setText(sigo ? "Dejar de seguir" : "Seguir");
+            if (listModel.isEmpty()) {
+                listModel.addElement("No se encontraron usuarios");
+            }
 
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error al cargar perfil: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error buscando: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void accionFollowToggle() {
-        String target = txtEntrar.getText().trim();
-        if (target.isEmpty()) return;
+    private void abrirPerfilExternoconRetroceso(String username) {
         try {
             instaManager manager = instaController.getInstance().getInsta();
             if (manager == null) return;
 
-            manager.setLoggedUser(currentUser);
-            boolean sigo = manager.isFollowing(target);
-            if (!sigo) {
-                boolean ok = manager.addFollow(target);
-                if (ok) {
-                    JOptionPane.showMessageDialog(this, "Ahora sigues a " + target);
-                } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo seguir o ya lo seguías.");
-                }
-            } else {
-                int resp = JOptionPane.showConfirmDialog(this, "¿Seguro quieres dejar de seguir a " + target + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-                if (resp == JOptionPane.YES_OPTION) {
-                    manager.quitarFollow(target);
-                    JOptionPane.showMessageDialog(this, "Has dejado de seguir a " + target);
-                }
+            if (!manager.checkUserExistance(username)) {
+                JOptionPane.showMessageDialog(this, "Ese usuario no existe o está desactivado.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
             }
-            buscarYMostrarPerfil();
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error follow: " + ex.getMessage());
-        }
-    }
 
-    private void verTweetsDelPerfil() {
-        String target = txtEntrar.getText().trim();
-        if (target.isEmpty()) return;
-        try {
-            instaManager manager = instaController.getInstance().getInsta();
-            ArrayList<String[]> posts = manager.getPosts(target);
-            if (posts.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No hay tweets/post de " + target);
-            } else {
-                StringBuilder sb = new StringBuilder();
-                for (String[] p : posts) {
-                    String autor = (p.length > 1) ? p[1] : "(?)";
-                    String fecha = (p.length > 2) ? p[2] : "(fecha)";
-                    String contenido = (p.length > 3) ? p[3] : "";
-                    sb.append(autor).append(": '").append(contenido).append("'   [").append(fecha).append("]\n\n");
-                }
-                JTextArea area = new JTextArea(sb.toString());
-                area.setEditable(false);
-                area.setBackground(new Color(20, 20, 20));
-                area.setForeground(Color.WHITE);
-                area.setCaretColor(Color.WHITE);
-                JScrollPane sp = new JScrollPane(area);
-                sp.setPreferredSize(new Dimension(380, 400));
-                JOptionPane.showMessageDialog(this, sp, "Tweets de " + target, JOptionPane.PLAIN_MESSAGE);
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (!(window instanceof JFrame)) return;
+            JFrame frame = (JFrame) window;
 
-                int entrar = JOptionPane.showConfirmDialog(this, "¿Entrar al perfil de " + target + "?", "Ir al perfil", JOptionPane.YES_NO_OPTION);
-                if (entrar == JOptionPane.YES_OPTION) {
-                    Window window = SwingUtilities.getWindowAncestor(this);
-                    if (window instanceof JFrame) {
-                        JFrame frame = (JFrame) window;
-                        frame.setContentPane(new InstaProfileUI(target));
-                        frame.pack();
-                        frame.setLocationRelativeTo(null);
-                        frame.revalidate();
-                        frame.repaint();
-                    }
-                }
-            }
+            VisibilidadProfileUI vp = new VisibilidadProfileUI(username, currentUser);
+            frame.setContentPane(vp);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.revalidate();
+            frame.repaint();
+
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error cargando tweets: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error al abrir perfil: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -405,6 +267,7 @@ public class InstaEditProfileUI extends JPanel {
         try {
             instaManager manager = instaController.getInstance().getInsta();
             if (manager == null) return;
+
             boolean estado = manager.getStatusUser(currentUser);
             if (estado) {
                 int resp = JOptionPane.showConfirmDialog(this, "¿Deseas desactivar tu cuenta? (se ocultará de búsquedas)", "Confirmar", JOptionPane.YES_NO_OPTION);
@@ -421,7 +284,19 @@ public class InstaEditProfileUI extends JPanel {
                 }
             }
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error en operación de cuenta: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error en operación de cuenta: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void volverAlPerfilPropio() {
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            JFrame frame = (JFrame) window;
+            frame.setContentPane(new InstaProfileUI(currentUser)); // vuelve al perfil propio
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.revalidate();
+            frame.repaint();
         }
     }
 
@@ -443,14 +318,4 @@ public class InstaEditProfileUI extends JPanel {
         btn.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
-
-    private void estilizarToggle(JToggleButton t) {
-        t.setBackground(new Color(30, 30, 30));
-        t.setForeground(COLOR_TEXT);
-        t.setFont(FONT_CAOS);
-        t.setFocusPainted(false);
-        t.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
-        t.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
 }
-

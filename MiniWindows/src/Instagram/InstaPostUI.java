@@ -9,6 +9,7 @@ import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -24,6 +25,7 @@ public class InstaPostUI extends JLayeredPane {
     private final String currentUser;
     private final ArrayList<String[]> feedPosts;
     private final int startIndex;
+    private final Runnable backAction;
 
     private String currentPostAuthor;
     private String currentImagePath;
@@ -48,10 +50,39 @@ public class InstaPostUI extends JLayeredPane {
     private final Font FONT_PLAIN = new Font("Segoe UI", Font.PLAIN, 13);
 
     public InstaPostUI(String currentUser, ArrayList<String[]> posts, int startIndex) {
+        this(currentUser, posts, startIndex, null);
+    }
+
+    public InstaPostUI(String currentUser, ArrayList<String[]> posts, int startIndex, Runnable backAction) {
         this.currentUser = currentUser;
         this.feedPosts = posts != null ? posts : new ArrayList<>();
         this.startIndex = Math.max(0, startIndex);
+        this.backAction = backAction;
+        initOnce();
+    }
 
+    public InstaPostUI(String currentUser, String authorToShowAll) {
+        this(currentUser, authorToShowAll, null);
+    }
+
+    public InstaPostUI(String currentUser, String authorToShowAll, Runnable backAction) {
+        this.currentUser = currentUser;
+        ArrayList<String[]> loaded = new ArrayList<>();
+        Runnable ba = backAction;
+        try {
+            instaManager manager = instaController.getInstance().getInsta();
+            if (manager != null && authorToShowAll != null) {
+                loaded = manager.getPosts(authorToShowAll);
+            }
+        } catch (IOException e) {
+        }
+        this.feedPosts = loaded != null ? loaded : new ArrayList<>();
+        this.startIndex = 0;
+        this.backAction = ba;
+        initOnce();
+    }
+
+    private void initOnce() {
         setLayout(null);
         setBackground(COLOR_BG);
         setOpaque(true);
@@ -169,14 +200,23 @@ public class InstaPostUI extends JLayeredPane {
         for (int i = 0; i < feedPosts.size(); i++) {
             String[] post = feedPosts.get(i);
             JPanel tarjeta = crearTarjetaPost(post);
+
             JPanel wrapper = new JPanel(new GridBagLayout());
             wrapper.setBackground(COLOR_BG);
             wrapper.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.weightx = 1.0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.insets = new Insets(0, 0, 0, 0);
+
             tarjeta.setMaximumSize(new Dimension(450, Integer.MAX_VALUE));
             tarjeta.setPreferredSize(new Dimension(450, tarjeta.getPreferredSize().height));
 
-            wrapper.add(tarjeta, new GridBagConstraints());
+            wrapper.add(tarjeta, gbc);
             wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, tarjeta.getPreferredSize().height + 10));
             mainContentPanel.add(wrapper);
 
@@ -497,10 +537,15 @@ public class InstaPostUI extends JLayeredPane {
                 for (String[] com : comments) {
                     String user = com.length > 0 ? com[0] : "usuario";
                     String text = com.length > 1 ? com[1] : "(sin texto)";
-                    listModelComentarios.addElement(new ComentarioData(user, text, null));
+                    String date = com.length > 2 ? com[2] : "";
+                    listModelComentarios.addElement(new ComentarioData(user, text, date));
                 }
                 if (labelContador != null) {
-                    labelContador.setText("<html><div style='width:30px; text-align:left;'>" + comments.size() + "</div></html>");
+                    labelContador.setText(String.valueOf(comments.size()));
+                }
+            } else {
+                if (labelContador != null) {
+                    labelContador.setText("0");
                 }
             }
         } catch (Exception e) {
@@ -522,7 +567,8 @@ public class InstaPostUI extends JLayeredPane {
                     manager.addComment(currentPostAuthor, currentImagePath, currentUser, texto);
                 }
 
-                listModelComentarios.addElement(new ComentarioData(currentUser, texto, null));
+                listModelComentarios.addElement(new ComentarioData(currentUser, texto, // fecha actual:
+                        new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date())));
                 txtComentario.setText("");
                 listaComentarios.ensureIndexIsVisible(listModelComentarios.getSize() - 1);
 
@@ -530,9 +576,9 @@ public class InstaPostUI extends JLayeredPane {
                     try {
                         String shown = labelContadorSeleccionado.getText().replaceAll("[^0-9]", "");
                         int num = shown.isEmpty() ? 0 : Integer.parseInt(shown);
-                        labelContadorSeleccionado.setText("<html><div style='width:30px; text-align:left;'>" + (num + 1) + "</div></html>");
+                        labelContadorSeleccionado.setText(String.valueOf(num + 1)); // plain number
                     } catch (Exception e) {
-                        labelContadorSeleccionado.setText("<html><div style='width:30px; text-align:left;'>1</div></html>");
+                        labelContadorSeleccionado.setText("1");
                     }
                 }
 
@@ -544,37 +590,33 @@ public class InstaPostUI extends JLayeredPane {
 
     private static class ComentarioData {
 
-        String usuario, texto, rutaFoto;
+        String usuario, texto, fecha;
 
-        public ComentarioData(String u, String t, String r) {
+        public ComentarioData(String u, String t, String f) {
             usuario = u;
             texto = t;
-            rutaFoto = r;
+            fecha = f;
         }
     }
 
     private class ComentarioRenderer implements ListCellRenderer<ComentarioData> {
 
-        private JPanel panel;
-        private JLabel lblAvatar;
-
-        public ComentarioRenderer() {
-            panel = new JPanel(new BorderLayout(10, 5));
-            panel.setBackground(COLOR_DRAWER_BG);
-            panel.setBorder(new EmptyBorder(8, 10, 8, 10));
-            lblAvatar = new JLabel();
-            lblAvatar.setPreferredSize(new Dimension(34, 34));
-            panel.add(lblAvatar, BorderLayout.WEST);
-        }
-
         @Override
         public Component getListCellRendererComponent(JList<? extends ComentarioData> list, ComentarioData value, int index, boolean isSelected, boolean cellHasFocus) {
-            lblAvatar.setIcon(generarAvatar(value.usuario, 32));
-            JPanel textPanel = new JPanel(new BorderLayout());
-            textPanel.setBackground(COLOR_DRAWER_BG);
+            JPanel panel = new JPanel(new BorderLayout(10, 5));
+            panel.setBackground(COLOR_DRAWER_BG);
+            panel.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+            JLabel lblAvatar = new JLabel(generarAvatar(value.usuario, 32));
+            lblAvatar.setPreferredSize(new Dimension(34, 34));
+            panel.add(lblAvatar, BorderLayout.WEST);
+
+            JPanel center = new JPanel(new BorderLayout());
+            center.setBackground(COLOR_DRAWER_BG);
             JLabel lblName = new JLabel(value.usuario);
             lblName.setFont(FONT_BOLD);
             lblName.setForeground(COLOR_TEXT);
+
             JTextArea areaTexto = new JTextArea(value.texto);
             areaTexto.setBackground(COLOR_DRAWER_BG);
             areaTexto.setForeground(new Color(220, 220, 220));
@@ -582,11 +624,18 @@ public class InstaPostUI extends JLayeredPane {
             areaTexto.setLineWrap(true);
             areaTexto.setWrapStyleWord(true);
             areaTexto.setEditable(false);
-            textPanel.add(lblName, BorderLayout.NORTH);
-            textPanel.add(areaTexto, BorderLayout.CENTER);
-            panel.removeAll();
-            panel.add(lblAvatar, BorderLayout.WEST);
-            panel.add(textPanel, BorderLayout.CENTER);
+
+            center.add(lblName, BorderLayout.NORTH);
+            center.add(areaTexto, BorderLayout.CENTER);
+
+            JLabel lblFecha = new JLabel(value.fecha != null ? value.fecha : "");
+            lblFecha.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            lblFecha.setForeground(Color.LIGHT_GRAY);
+            lblFecha.setHorizontalAlignment(SwingConstants.RIGHT);
+
+            panel.add(center, BorderLayout.CENTER);
+            panel.add(lblFecha, BorderLayout.EAST);
+
             return panel;
         }
     }
@@ -637,6 +686,14 @@ public class InstaPostUI extends JLayeredPane {
     }
 
     private void regresarAlPerfil() {
+        if (backAction != null) {
+            try {
+                backAction.run();
+                return;
+            } catch (Exception ex) {
+            }
+        }
+
         Window window = SwingUtilities.getWindowAncestor(this);
         if (window instanceof JFrame) {
             JFrame frame = (JFrame) window;

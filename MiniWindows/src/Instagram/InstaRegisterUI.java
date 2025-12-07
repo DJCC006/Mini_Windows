@@ -39,11 +39,9 @@ public class InstaRegisterUI extends JPanel {
     private final Font FONT_CAOS = new Font("Comic Sans MS", Font.BOLD, 12);
     private final Font FONT_TITLE = new Font("Comic Sans MS", Font.BOLD | Font.ITALIC, 28);
 
-    
     genFondos panelFondos;
-    
+
     public InstaRegisterUI() {
-        //this.panelFondos=panelFondos;
         setLayout(null);
         setBackground(COLOR_BG);
         setPreferredSize(new Dimension(400, 650));
@@ -125,11 +123,7 @@ public class InstaRegisterUI extends JPanel {
         lblBackLogin.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-   
-                
-                
-                
-                
+
                 Window window = SwingUtilities.getWindowAncestor(InstaRegisterUI.this);
                 if (window instanceof JFrame) {
                     JFrame frame = (JFrame) window;
@@ -240,18 +234,4 @@ public class InstaRegisterUI extends JPanel {
             JOptionPane.showMessageDialog(this, "Error catastrófico: " + ex.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-//     private JInternalFrame createLogWindow(){
-//        JInternalFrame Frame = new JInternalFrame("OUTSTAGRAM", true, true, true, true);
-//         InstaLoginUI instaPanel = new InstaLoginUI(panelFondos);
-//         Frame.add(instaPanel, BorderLayout.CENTER);
-//         
-//         Frame.setSize(400,650);
-//         Frame.setLocation(100, 50);
-//         Frame.setVisible(true);
-//        return Frame;
-//    }
-    
-    
-    
 }
