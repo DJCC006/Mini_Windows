@@ -79,6 +79,7 @@ public class fileExplorer extends JPanel{
     //cosas para portapapeles
     private List<File> clipboardFiles= new ArrayList<>();
     private List<File> organizerFiles = new ArrayList<>();
+    private List<File> papeleraFiles = new ArrayList<>();
     private boolean isCutOperation =false;
     
     JPanel northPanel = new JPanel(new BorderLayout());
@@ -246,13 +247,13 @@ public class fileExplorer extends JPanel{
         
         JButton restaurar = new JButton("<html><b>Restaurar Archivos</b></html>");
         restaurar.setToolTipText("Restaura los archivos seleccionados");
-        //restaurar..addActionListener(e ->restuararFiles());
+        restaurar.addActionListener(e ->restuararFiles());
         toolBar.add(restaurar);
         
         
         JButton eliminar = new JButton("<html><b>Eliminar</b></html>");
         eliminar.setToolTipText("Elimina los archivos permanentemente");
-        //listener aqui
+        eliminar.addActionListener(e -> borrarFiles());
         toolBar.add(eliminar);
         
         
@@ -273,9 +274,113 @@ public class fileExplorer extends JPanel{
         return toolBar;
     }
     
+    private void borrarFiles(){
+        int[] selectedRows = fileTable.getSelectedRows();
+        if(selectedRows.length==0){
+            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a borrar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        
+        int confirmacion = JOptionPane.showConfirmDialog(null, "¿Desea borrar permanente los archivos seleccionados?", "Confirmar Eliminacion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        
+        if(confirmacion==JOptionPane.YES_OPTION){
+            papeleraFiles.clear();
+            
+            
+            //agregamos archivos seleccionados a papelera
+             for(int row: selectedRows){
+                File arc= (File) tableModel.getValueAt(row, 0);
+                papeleraFiles.add(arc);
+            }
+            
+            
+            
+             boolean success=true;
+            
+             for(File sourcefile: papeleraFiles){
+                try{
+                    borrar(sourcefile);
+                }catch(Exception e){
+                    success=false;
+                }   
+            }
+             
+             
+            if(success){
+                 organizerFiles.clear();
+                displayContents(new File(currentDirPath));
+                updateTree(new File(currentDirPath));
+                JOptionPane.showMessageDialog(this, "Elementos eliminados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            }   
+        }
+    }
     
     
     
+    private void restaurarArchivo(File archivoEnPapelera){
+       
+        String nombreOriginal = archivoEnPapelera.getName();
+        
+        
+        String rutaDocs =setUserRoute+"Mis Documentos";
+        File dirDestino = new File(rutaDocs);
+        File archivoRestaurado = new File(dirDestino, nombreOriginal);
+        
+        if(!dirDestino.exists() || !dirDestino.isDirectory()){
+            System.out.println("Se direcciona a otro lugar");
+            return;
+        }
+        
+        if(archivoEnPapelera.renameTo(archivoRestaurado)){
+            System.out.println("Se ha restaurado el archivo");
+        }else{
+            System.out.println("No se pudo restaurar");
+        }
+    }
+    
+    
+    private void restuararFiles(){
+        int[] selectedRows = fileTable.getSelectedRows();
+        if(selectedRows.length==0){
+            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a borrar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        
+        int confirmacion = JOptionPane.showConfirmDialog(null, "¿Desea restaurar los archivos seleccionados?", "Confirmar Restauracion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        
+        if(confirmacion==JOptionPane.YES_OPTION){
+            papeleraFiles.clear();
+            
+            
+            //agregamos archivos seleccionados a papelera
+             for(int row: selectedRows){
+                File arc= (File) tableModel.getValueAt(row, 0);
+                papeleraFiles.add(arc);
+            }
+            
+            
+            
+             boolean success=true;
+            
+             for(File sourcefile: papeleraFiles){
+                try{
+                    restaurarArchivo(sourcefile);
+                }catch(Exception e){
+                    success=false;
+                }   
+            }
+             
+             
+            if(success){
+                 organizerFiles.clear();
+                displayContents(new File(currentDirPath));
+                updateTree(new File(currentDirPath));
+                JOptionPane.showMessageDialog(this, "Elementos restaurados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            }   
+        }
+    }
     
     private JToolBar setupToolBar(){
         JToolBar toolBar= new JToolBar();
@@ -867,9 +972,7 @@ public class fileExplorer extends JPanel{
             
             
             //File file= (File) tableModel.getValueAt(row,0);
-            
-            
-            String uniqueName = file.getName()+"-"+ UUID.randomUUID().toString().substring(0,4);
+          
             File destFile = new File(recycleBin, file.getName());
             
             
