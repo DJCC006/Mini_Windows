@@ -5,6 +5,7 @@
 package Logica.ManejoUsuarios;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -89,6 +90,29 @@ public class sesionManager {
         return false;
     }
     
+    
+    
+    //metodo llamado al iniciar programa
+    public static void loadUsers() throws IOException{
+        //Obtenemos referencia de ruta
+        RandomAccessFile managerRoute = UserManager.getManagerRoute();
+        
+        
+        //vamos a lo largo del archivo agregando usuarios como user al controlador de usuarios
+        managerRoute.seek(0);
+        while(managerRoute.getFilePointer()< managerRoute.length()){
+            String name = managerRoute.readUTF();
+            String pass = managerRoute.readUTF();
+            User newUser = new User(name, pass);
+            UsuariosControlador.getInstance().getUsuarios().add(newUser);
+            managerRoute.readBoolean();
+            System.out.println("Usuario cargado...");
+        }
+        
+        
+        //NOTA...AL FINAL EL STATUS DE ACTIVO/NO ACTIVO NO SE USA. AQUI EXISTIRAN SOLAMENTE LOS USUARIOS EXISTENTES
+        
+    }
     
     
     public static boolean passwordCheck(JPasswordField passwordfield){
