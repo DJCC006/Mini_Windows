@@ -83,6 +83,8 @@ public class fileExplorer extends JPanel{
     
     JPanel northPanel = new JPanel(new BorderLayout());
     
+    JButton restaurar;
+    JButton eliminar;
     
     public fileExplorer(genFondos panelFondo){
         setLayout(new BorderLayout(5,5));
@@ -109,23 +111,48 @@ public class fileExplorer extends JPanel{
         
         
         
-//        //Ordenar
-//        JPanel panelSort = new JPanel(new BorderLayout());
-//        pathLabel = new JLabel("Ruta Actual: "+ formatDisplayPath(raizUsuario));
-//        pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
-//        panelSort.add(pathLabel, BorderLayout.WEST);
+        //Ordenar
+        JPanel panelSort = new JPanel(new BorderLayout());
+        pathLabel = new JLabel("Ruta Actual: "+ formatDisplayPath(raizUsuario));
+        pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
+        panelSort.add(pathLabel, BorderLayout.WEST);
+        
+        setupSortControls(panelSort);
+        
+        
+        
+          
+//        JToolBar papeleraBts= new JToolBar();
+//        papeleraBts.setFloatable(false);
 //        
-//        setupSortControls(panelSort);
-//        northPanel.add(panelSort, BorderLayout.CENTER);
+//        restaurar = new JButton("<html><b>Restaurar Archivos</b></html>");
+//        restaurar.setToolTipText("Restaura los archivos seleccionados");
+//        //restaurar..addActionListener(e ->restuararFiles());
+//        restaurar.setVisible(false);
+//        papeleraBts.add(restaurar);
+//        
+//        
+//        eliminar = new JButton("<html><b>Eliminar</b></html>");
+//        eliminar.setToolTipText("Elimina los archivos permanentemente");
+//        papeleraBts.add(eliminar);
+//        eliminar.setVisible(false);
+//        panelSort.add(papeleraBts, BorderLayout.CENTER);
+//        
         
         
         
+        northPanel.add(panelSort, BorderLayout.CENTER);
+        
+        
+      
+        //listener aqui
+     
         //Panel Principal
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(fileTree), new JScrollPane(fileTable));
         splitPane.setDividerLocation(200);
-//        
-//        pathLabel = new JLabel("Ruta Actual: "+raizUsuario);
-//        pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
+        
+        pathLabel = new JLabel("Ruta Actual: "+raizUsuario);
+        pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
        // add(pathLabel, BorderLayout.WEST);
         
         //add(panelSort, BorderLayout.NORTH);
@@ -174,6 +201,44 @@ public class fileExplorer extends JPanel{
 //        return userString;
     }
     
+   
+    /*
+    private JToolBar setupPapeleraBar(){
+        JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        
+     
+        
+        return toolBar;
+    }
+    
+    */
+    
+//    private void actualizarVistaBotones(File carpeta){
+//        if(carpeta.getName().equals("Papelera")){
+//            eliminar.setVisible(true);
+//            restaurar.setVisible(true);
+//            northPanel.revalidate();
+//            northPanel.repaint();
+//        }
+//    }
+//    
+    
+    
+      private void actualizarVistaBotones(File carpeta){
+          northPanel.removeAll();
+        if(carpeta.getName().equals("Papelera")){
+            northPanel.add(setupPapeleraBar(), BorderLayout.NORTH);
+            
+        }else{
+            northPanel.add(setupToolBar(), BorderLayout.NORTH);
+        }
+        
+        northPanel.revalidate();
+        northPanel.repaint();
+    }
+    
+    
     
     private JToolBar setupPapeleraBar(){
         JToolBar toolBar = new JToolBar();
@@ -210,27 +275,6 @@ public class fileExplorer extends JPanel{
     
     
     
-    private void actualizarVistaBotones(File carpeta){
-        boolean estaEnPapelera = carpeta.getAbsolutePath().equals(recycleBin);
-        northPanel.removeAll();
-        
-        if(estaEnPapelera){
-            JToolBar BOTONESP= setupPapeleraBar();
-            northPanel.add(BOTONESP, BorderLayout.NORTH);
-            System.out.println("Se ponen los botones de papelera");
-        }else{
-            northPanel.add(setupToolBar(), BorderLayout.NORTH);
-            System.out.println("No estamos en la papelera");
-        }
-        
-        System.out.println(currentDirPath);
-        
-        northPanel.revalidate();
-        northPanel.repaint();
-        
-        
-        
-    }
     
     
     private JToolBar setupToolBar(){
@@ -305,7 +349,8 @@ public class fileExplorer extends JPanel{
         toolBar.add(abrirBt);
         
         
-        //Ordenar
+        
+         //Ordenar
         JPanel panelSort = new JPanel(new BorderLayout());
         pathLabel = new JLabel("Ruta Actual: "+ formatDisplayPath(raizUsuario));
         pathLabel.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
@@ -845,6 +890,26 @@ public class fileExplorer extends JPanel{
     }
     
     
+     private boolean borrarAux(File mf){
+        
+        if(mf.isDirectory()){
+            for(File arc:mf.listFiles()){
+                borrarAux(arc);
+            }
+        }
+        return mf.delete();
+    }
+    
+    
+     public boolean borrar(File mifile){
+        
+        if(mifile.isDirectory()){
+            for(File arc:mifile.listFiles()){
+                borrarAux(arc);
+            }
+        }
+        return mifile.delete();
+    }
     
     
     
