@@ -216,9 +216,39 @@ public class UserManager {
         
         
         return false; //en caso de no completarse, es porque no existe usuario bajo el nombre 
-      
-      
+
   }
+  
+  
+  public static boolean borrarFilesUser(String Username) throws IOException {
+      File userRute = new File(userRoute, Username);
+      
+      if(userRute.isDirectory()){
+            for(File arc:userRute.listFiles()){
+                borrarAux(arc);
+            }
+        }
+        return userRute.delete();
+        
+        //Una vez limpia todo el directorio, se procede a borrar la carpeta en si
+  }
+  
+  
+  private static boolean borrarAux(File mf) throws IOException{
+      if(mf.isDirectory()){
+            for(File arc:mf.listFiles()){
+                borrarAux(arc);
+            }
+        }
+        return mf.delete();
+  }
+  
+  
+  
+  
+  
+  
+  
    
     
   

@@ -213,7 +213,7 @@ public class userManagement extends JPanel {
     private void prepareDeletePanel(){
         if(deleteUserComboBox!=null){
             String[] usernames = UsuariosControlador.getInstance().getUsuarios().stream()
-                .filter(u-> !u.getName().equalsIgnoreCase("ADMIN2")).map(User::getName).toArray(String[]::new);
+                .filter(u-> !u.getName().equalsIgnoreCase("ADMIN2") || u.getStatus()==true).map(User::getName).toArray(String[]::new);
             
             DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) deleteUserComboBox.getModel();
             model.removeAllElements();
@@ -289,7 +289,35 @@ public class userManagement extends JPanel {
         gbc.gridx =1; gbc.gridy=2; gbc.anchor= GridBagConstraints.CENTER; panel.add(saveBt, gbc);
         
         saveBt.addActionListener(e -> {
-            System.out.println("Logica de crear");
+            
+            String name = userField.getText();
+            char[] elements = passField.getPassword();
+            String password = String.valueOf(elements);
+            
+            
+           boolean verName=false;
+           try{
+                verName=UserManager.checkUsername(name);//sesionManager.userCheck(name);
+           }catch(IOException e2){
+               System.out.println("Erorr al checar el nombre");
+           }
+           
+           boolean verPass = sesionManager.passwordCheck(password);
+           
+           if(verName!=true && verPass!= true){
+               JOptionPane.showMessageDialog(null, "No se pudo crear nuevo usuario");
+           }else{
+               
+               try{
+                 UserManager.addUser(name, password);//agrego en archivo
+                 User nUsuario = new User(name, password);
+                 UsuariosControlador.getInstance().getUsuarios().add(nUsuario);//agrego en controlador
+                 
+                 JOptionPane.showMessageDialog(null, "Usuario Creado Exitosamente");
+               }catch(IOException e2){
+                   System.out.println("Erro a la hora de crear usuario extra");
+               }
+           }
         });
         return panel;
         
@@ -312,8 +340,7 @@ public class userManagement extends JPanel {
         prepareDeletePanel();
         
         
-       //String[] usernames = UsuariosControlador.getInstance().getUsuarios().stream()
-        //        .filter(u-> !u.getName().equalsIgnoreCase("ADMIN")).map(User::getName).toArray(String[]::new);
+   
         
        
         
@@ -329,7 +356,48 @@ public class userManagement extends JPanel {
         gbc.gridx=1; gbc.gridy=1; gbc.anchor = GridBagConstraints.CENTER; panel.add(deleteButton,gbc);
         
         deleteButton.addActionListener(e -> {
-            System.out.println("Ejecuta proceso de eliminar");
+            String usuarioSelec = (String) deleteUserComboBox.getSelectedItem();
+            if(usuarioSelec==null || usuarioSelec.equals("No hay usuarios para eliminar") || usuarioSelec.equals("Cargando usuarios...")){
+                JOptionPane.showMessageDialog(this, "Debe seleccionar un usuario valido para eliminar");
+                return;
+            }
+            
+            int confirmation = JOptionPane.showConfirmDialog(this, 
+                    "¿Esta seguro que desea eliminar permanentemente al usuario '"+usuarioSelec+"'? Esta accion es irreversible",
+                    "Confirmar Eliminacion", JOptionPane.YES_NO_OPTION);
+            
+            if(confirmation == JOptionPane.YES_OPTION){
+                
+                //LOGIC AQUI DE LIMINAR
+                //Eliminamos de controlador
+                ArrayList<User> usuarios =UsuariosControlador.getInstance().getUsuarios();
+                for(User us: usuarios){
+                    if(us.getName().equals(usuarioSelec)){
+                        us.changStatus();
+                    }
+                }
+                UsuariosControlador.getInstance().getUsuarios().remove(usuarioSelec);
+                
+                
+                //Cambiamos estado en archivo
+                try{
+                    UserManager.changeStatus(usuarioSelec, false);
+                    
+                    //eliminamos archivos fisicos
+                    UserManager.borrarFilesUser(usuarioSelec);
+                }catch(IOException e2){}
+                
+                
+                
+                
+                
+                
+                
+                
+                prepareDeletePanel();
+                this.revalidate();
+                this.repaint();
+            }
         });
         return panel;
     }

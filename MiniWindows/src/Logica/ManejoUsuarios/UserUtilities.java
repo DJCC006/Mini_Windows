@@ -39,6 +39,13 @@ public class UserUtilities {
         this.password=password;
     }
     
+    public void changStatus(){
+        if(status){
+            status=false;
+        }
+        
+    }
+    
     
     //getters
     public String getName(){

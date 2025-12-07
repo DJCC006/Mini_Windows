@@ -103,15 +103,14 @@ public class sesionManager {
         while(managerRoute.getFilePointer()< managerRoute.length()){
             String name = managerRoute.readUTF();
             String pass = managerRoute.readUTF();
-            User newUser = new User(name, pass);
-            UsuariosControlador.getInstance().getUsuarios().add(newUser);
-            managerRoute.readBoolean();
-            System.out.println("Usuario cargado...");
-        }
-        
-        
-        //NOTA...AL FINAL EL STATUS DE ACTIVO/NO ACTIVO NO SE USA. AQUI EXISTIRAN SOLAMENTE LOS USUARIOS EXISTENTES
-        
+            boolean status = managerRoute.readBoolean();
+            if(status){
+                User newUser = new User(name, pass);
+                UsuariosControlador.getInstance().getUsuarios().add(newUser);
+                System.out.println("Usuario cargado...");
+            }
+            
+        }        
     }
     
     
