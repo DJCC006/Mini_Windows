@@ -9,23 +9,86 @@ import Logica.ManejoUsuarios.UserManager;
 import Logica.ManejoUsuarios.UsuariosControlador;
 import Logica.ManejoUsuarios.sesionManager;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
+import javax.swing.SwingConstants;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 /**
  *
  * @author David
  */
 public class userManagement extends JPanel {
+    
+    
+    //Componentes iniciales
+    private JPanel cardPanel;
+    private CardLayout cardLayout;
+    
+  
+    
+   private JTextField  createUserField;
+   private JPasswordField createPassField;
+   private JComboBox<String> deleteUserComboBox;
+   
+    private static final String CARD_CREAR = "CrearUsuario";
+    private static final String CARD_DESACTIVAR="DesactivarUsuario";
+    
     public userManagement(){
+        
+        setLayout(new BorderLayout());
+        setPreferredSize(new Dimension(900,600));
+        
+        
+        //parte de titulo
+        JLabel titulo= new JLabel("Administrador de Usuarios", SwingConstants.CENTER);
+        titulo.setFont(new Font("Arial", Font.BOLD, 24));
+        titulo.setBorder(BorderFactory.createEmptyBorder(15,0,15,0));
+        add(titulo, BorderLayout.NORTH);
+        
+        
+        //parte de panel de navegacion
+        JPanel menuPanel = createMenuPanel();
+        add(menuPanel, BorderLayout.WEST);
+        
+        
+        //parte central4
+        cardLayout = new CardLayout();
+        cardPanel = new JPanel(cardLayout);
+        
+        
+        cardPanel.add(CARD_CREAR, createCrearUsuarioPanel());
+        cardPanel.add(CARD_DESACTIVAR,createDeleteUserPanel());
+        
+        add(cardPanel, BorderLayout.CENTER);
+        
+        
+        
+        cardLayout.show(cardPanel, CARD_CREAR);
+        
+        /*
        setSize(400,300);
        setLayout(new BorderLayout(10,10));
        
@@ -78,7 +141,7 @@ public class userManagement extends JPanel {
                   
                }catch(IOException a){   
                }
-*/
+
            }
            
            
@@ -101,6 +164,192 @@ public class userManagement extends JPanel {
        
        add(centro, BorderLayout.CENTER);
        setVisible(true);
-       
+       */
     }
+    
+    
+    
+    private JPanel createMenuPanel(){
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(5,1,10,10));
+        panel.setPreferredSize(new Dimension(200,0));
+        panel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        panel.setBackground(new Color(240,240,240));
+        
+        JButton crearUserBt = new JButton("<html><b>Crear Nuevo Usuario</b></html");
+        crearUserBt.addActionListener(e -> {
+            prepareCreatePanel();
+            cardLayout.show(cardPanel, CARD_CREAR);
+            System.out.println("Se proesiono el crear");
+        });
+        
+        JButton desactivarUserBt = new JButton("<html><b>Desactivar Usuario</b></html>");
+        desactivarUserBt.addActionListener(e ->{
+            prepareCreatePanel();
+            cardLayout.show(cardPanel, CARD_DESACTIVAR);
+            System.out.println("Se proesiono el desactivar");
+        });
+        
+   
+        panel.add(crearUserBt);
+        panel.add(desactivarUserBt);
+        
+        
+        panel.add(new JLabel(""));
+        panel.add(new JLabel(""));
+        panel.add(new JLabel(""));
+        
+        return panel;
+        
+    }
+    
+    private void prepareCreatePanel(){
+        if(createUserField!= null) createUserField.setText("");
+        if(createPassField!= null) createPassField.setText("");
+    }
+    
+    
+    
+    private void prepareDeletePanel(){
+        if(deleteUserComboBox!=null){
+            String[] usernames = UsuariosControlador.getInstance().getUsuarios().stream()
+                .filter(u-> !u.getName().equalsIgnoreCase("ADMIN2")).map(User::getName).toArray(String[]::new);
+            
+            DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) deleteUserComboBox.getModel();
+            model.removeAllElements();
+            
+            if(usernames.length>0){
+                for(String name: usernames){
+                    model.addElement(name);
+                }
+                deleteUserComboBox.setEnabled(true);
+                //trabajar aqui estado
+            }else{
+                model.addElement("No hay usuarios a eliminar");
+                deleteUserComboBox.setEnabled(false);
+            }
+        }
+    }
+    
+    /*
+    private void refreshCardPanel(String cardNom){
+        Component existingComponent = cardComponentMap.get(cardNom);
+        if(existingComponent!=null){
+            cardPanel.remove(existingComponent);
+            cardComponentMap.remove(cardNom);
+        }
+        
+        Component newComponent = null;
+        if(cardNom.equals(CARD_MOSTRAR)){
+            newComponent = createShowUsersPanel();
+        }else if(cardNom.equals(CARD_DESACTIVAR)){
+            newComponent = createDeleteUserPanel();
+        }else if(cardNom.equals(CARD_CREAR)){
+            newComponent = createCrearUsuarioPanel(); 
+        }
+        
+        
+        if(newComponent!=null){
+            addCard(cardNom, newComponent);
+        }
+        
+        
+        cardLayout.show(cardPanel, cardNom);
+        cardPanel.revalidate();
+        cardPanel.repaint();
+        this.revalidate();
+        this.repaint();
+    }
+*/
+    
+
+    
+    private JPanel createCrearUsuarioPanel(){
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(50,50,50,50));
+        panel.setBackground(Color.WHITE);
+        
+        JLabel userLabel = new JLabel("Nombre de Usuario:");
+        JTextField userField = new JTextField(20);
+        JLabel passLabel = new JLabel("Contraseña Inicial:");
+        JPasswordField passField = new JPasswordField(20);
+        JButton saveBt= new JButton("Guardar Nuevo Usuario");
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets= new Insets(10,10,10,10);
+        gbc.fill= GridBagConstraints.HORIZONTAL;
+        
+        gbc.gridx =0; gbc.gridy=0; gbc.anchor= GridBagConstraints.EAST; panel.add(userLabel, gbc);
+        gbc.gridx=1; gbc.anchor= GridBagConstraints.WEST; panel.add(userField, gbc);
+        
+        
+        gbc.gridx =0; gbc.gridy=1; gbc.anchor= GridBagConstraints.EAST; panel.add(passLabel, gbc);
+        gbc.gridx=1; gbc.anchor= GridBagConstraints.WEST; panel.add(passField, gbc);
+        
+        gbc.gridx =1; gbc.gridy=2; gbc.anchor= GridBagConstraints.CENTER; panel.add(saveBt, gbc);
+        
+        saveBt.addActionListener(e -> {
+            System.out.println("Logica de crear");
+        });
+        return panel;
+        
+    }
+    
+    
+    private JPanel createDeleteUserPanel(){
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(50,50,50,50));
+        panel.setBackground(Color.LIGHT_GRAY);
+        
+        
+        deleteUserComboBox = new JComboBox<>(new String[]{"Cargando usuarios..."});
+        deleteUserComboBox.setPreferredSize(new Dimension(250, deleteUserComboBox.getPreferredSize().height));
+        
+        
+        JLabel selectLabel = new JLabel("Seleccionar Usuario a Eliminar:");
+        JButton deleteButton = new JButton("Eliminar Cuenta Permanentemente");
+        
+        prepareDeletePanel();
+        
+        
+       //String[] usernames = UsuariosControlador.getInstance().getUsuarios().stream()
+        //        .filter(u-> !u.getName().equalsIgnoreCase("ADMIN")).map(User::getName).toArray(String[]::new);
+        
+       
+        
+    
+        
+        GridBagConstraints gbc= new GridBagConstraints();
+        gbc.insets= new Insets(10,10,10,10);
+        gbc.fill= GridBagConstraints.HORIZONTAL;
+        
+        gbc.gridx=0; gbc.gridy=0; gbc.anchor = GridBagConstraints.EAST; panel.add(selectLabel,gbc);
+        gbc.gridx=1; gbc.anchor=GridBagConstraints.WEST; panel.add(deleteUserComboBox, gbc);
+        
+        gbc.gridx=1; gbc.gridy=1; gbc.anchor = GridBagConstraints.CENTER; panel.add(deleteButton,gbc);
+        
+        deleteButton.addActionListener(e -> {
+            System.out.println("Ejecuta proceso de eliminar");
+        });
+        return panel;
+    }
+    
+    /*
+    public static void main(String[] args) {
+        
+     
+        ArrayList<User> array = new ArrayList<>();
+        User hola = new User("hola", "holis1");
+        array.add(hola);
+        UsuariosControlador.getInstance().setUsuarios(array);
+        
+        
+        
+        JFrame frame = new JFrame();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(900,600);
+        frame.add(new userManagement());
+        frame.setVisible(true);
+    }
+*/
 }

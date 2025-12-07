@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 /**
- *
+ *CLASE REFERENTE A ARCHIVOS DE MANEJO DE USUARIOS
  * @author David
  */
 public class UserManager {
@@ -43,6 +43,10 @@ public class UserManager {
         BOOLEAN status
         
     */
+    public static RandomAccessFile getManagerRoute(){
+        return userManage;
+    }
+    
     public static void addUser(String name, String password) throws IOException{
         
         File route = new File(userRoute,name);
@@ -194,7 +198,7 @@ public class UserManager {
   }
   
   
-  public static boolean changePass(String name, boolean newStatus) throws IOException{
+  public static boolean changeStatus(String name, boolean newStatus) throws IOException{
       userManage.seek(0);
         long postemp;
         while(userManage.getFilePointer()<userManage.length()){

@@ -9,6 +9,7 @@ import Instagram.instaManager;
 import Logica.ManejoUsuarios.User;
 import Logica.ManejoUsuarios.UserManager;
 import Logica.ManejoUsuarios.UsuariosControlador;
+import Logica.ManejoUsuarios.sesionManager;
 import Logica.Ventanas.LogInWindow;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,35 +21,31 @@ import java.util.ArrayList;
 public class PowerOn {
     public static void main(String[] args) {
         
-        //Crear gestor de usuarios
+        //Crear archivo gestor de usuarios
         UserManager userManagement = new UserManager();
-        
+        User admin=null;
         //crear cuenta admin CON NUEVO METOODO
         try{
-            userManagement.addUser("ADMIN2", "ADMIN123");
+            userManagement.addUser("ADMIN2", "ADMIN123"); //agregar cuenta admin al archivo
+            admin= new User("ADMIN2", "ADMIN123");//crear objeto admin para controlador
         }catch(IOException e){}
         
-        /*
-        User adminUser = new User("ADMIN","ADMIN123");
-        try{
-            adminUser.createInitUserDir();
-            adminUser.createInicialDirs();
-        }catch(IOException e){
-            System.out.println("ERROR AL CREAR ADMIN");
-        }
-        */
+       
         //Creacion de carpeta que maneja externamente Instagram
         instaManager instagram= new instaManager();
         instaController.getInstance().setInsta(instagram);//inicializacion de singelton para trabajar con la informacion de isntagram
         
-        /*
+       
         
-        //Esto es pasable para admin. Este mismo bloque se ejecuta cuando se cree algun otro usuario
-        adminUser.setTyp("ADMIN");
+       
+        //Creacion de controlador de usuarios
         ArrayList<User> usuarios = new ArrayList<>();
-        usuarios.add(adminUser);
         UsuariosControlador.getInstance().setUsuarios(usuarios);
-*/
+        try{
+            sesionManager.loadUsers(); //cargar como objetos users todos los usuarios almacenados en el archivo
+        }catch(IOException e2){};
+       
+
         LogInWindow ventana = new LogInWindow();
     }
 }

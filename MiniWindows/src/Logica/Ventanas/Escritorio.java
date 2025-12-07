@@ -435,7 +435,7 @@ public class Escritorio {
          userManagement gestorPanel = new userManagement();
          fGestorFrame.add(gestorPanel, BorderLayout.CENTER);
          
-         fGestorFrame.setSize(400,300);
+         fGestorFrame.setSize(900,600);
          fGestorFrame.setLocation(50, 50);
          fGestorFrame.setVisible(true);
          return fGestorFrame;
