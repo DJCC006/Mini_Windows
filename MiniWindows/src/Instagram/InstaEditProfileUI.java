@@ -21,7 +21,11 @@ public class InstaEditProfileUI extends JPanel {
     private final String currentUser;
 
     private final Color COLOR_BG = Color.BLACK;
-    private final Color COLOR_BTN = new Color(255, 69, 0);
+    // Tu color rojo original
+    private final Color COLOR_BTN = new Color(255, 69, 0); 
+    // Un rojo un poco más oscuro para cuando pasas el mouse
+    private final Color COLOR_BTN_HOVER = new Color(200, 50, 0); 
+    
     private final Color COLOR_TEXT = Color.WHITE;
     private final Color COLOR_BORDER = new Color(100, 100, 100);
     private final Font FONT_TITLE = new Font("Comic Sans MS", Font.BOLD | Font.ITALIC, 20);
@@ -82,22 +86,13 @@ public class InstaEditProfileUI extends JPanel {
         title.setBounds(50, 12, 180, 30);
         p.add(title);
 
-        btnQuickToggle = new JButton("Desactivar");
+        // USAMOS EL NUEVO BOTÓN ROJO
+        btnQuickToggle = new BotonRojo("Desactivar");
         btnQuickToggle.setBounds(240, 12, 130, 30);
-        estilizarBotonPequenoHeader(btnQuickToggle);
         btnQuickToggle.addActionListener(e -> toggleCuenta());
         p.add(btnQuickToggle);
 
         return p;
-    }
-
-    private void estilizarBotonPequenoHeader(JButton btn) {
-        btn.setBackground(new Color(30, 30, 30));
-        btn.setForeground(COLOR_BTN);
-        btn.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private JPanel crearPanelBuscar() {
@@ -115,9 +110,9 @@ public class InstaEditProfileUI extends JPanel {
         txtBuscar.addActionListener(e -> ejecutarBusqueda());
         arriba.add(txtBuscar);
 
-        JButton btnBuscar = new JButton("Buscar");
+        // USAMOS EL NUEVO BOTÓN ROJO
+        JButton btnBuscar = new BotonRojo("Buscar");
         btnBuscar.setBounds(280, 10, 90, 40);
-        estilizarBoton(btnBuscar);
         btnBuscar.addActionListener(e -> ejecutarBusqueda());
         arriba.add(btnBuscar);
 
@@ -191,9 +186,9 @@ public class InstaEditProfileUI extends JPanel {
         JPanel p = new JPanel(null);
         p.setBackground(COLOR_BG);
 
-        btnToggleCuenta = new JButton("Desactivar / Activar cuenta");
+        // USAMOS EL NUEVO BOTÓN ROJO
+        btnToggleCuenta = new BotonRojo("Desactivar / Activar cuenta");
         btnToggleCuenta.setBounds(40, 80, 320, 40);
-        estilizarBoton(btnToggleCuenta);
         btnToggleCuenta.addActionListener(e -> toggleCuenta());
         p.add(btnToggleCuenta);
 
@@ -222,6 +217,10 @@ public class InstaEditProfileUI extends JPanel {
 
         return bar;
     }
+
+    // =========================================================================
+    // LÓGICA DE NEGOCIO (Igual que antes)
+    // =========================================================================
 
     private void ejecutarBusqueda() {
         String q = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim();
@@ -382,12 +381,43 @@ public class InstaEditProfileUI extends JPanel {
                 BorderFactory.createEmptyBorder(5, 10, 5, 5)));
     }
 
-    private void estilizarBoton(JButton btn) {
-        btn.setBackground(new Color(30, 30, 30));
-        btn.setForeground(COLOR_TEXT);
-        btn.setFont(FONT_CAOS);
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+    private class BotonRojo extends JButton {
+
+        public BotonRojo(String text) {
+            super(text);
+            setContentAreaFilled(false);
+            setFocusPainted(false);      
+            setBorderPainted(false);     
+            
+            setBackground(COLOR_BTN);
+            setForeground(Color.WHITE);
+            setFont(FONT_CAOS);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    setBackground(COLOR_BTN_HOVER);
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    setBackground(COLOR_BTN);
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+
+            super.paintComponent(g2);
+            g2.dispose();
+        }
     }
 }

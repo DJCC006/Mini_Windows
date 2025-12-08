@@ -1,6 +1,6 @@
 /*
-     * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-     * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Instagram;
 
@@ -31,10 +31,13 @@ public class InstaProfileUI extends JPanel {
     private JPanel gridFotos;
 
     private final Color COLOR_BG = Color.BLACK;
-    private final Color COLOR_BTN = new Color(255, 69, 0);
     private final Color COLOR_TEXT = Color.WHITE;
     private final Color COLOR_BORDER = new Color(100, 100, 100);
     private final Font FONT_TEXT = new Font("Comic Sans MS", Font.PLAIN, 12);
+
+    private final Color COLOR_BTN = new Color(255, 69, 0);
+    private final Color COLOR_BTN_HOVER = new Color(200, 50, 0);
+    private final Font FONT_CAOS = new Font("Comic Sans MS", Font.BOLD, 12);
 
     public InstaProfileUI(String username) {
         this(username, username);
@@ -100,9 +103,8 @@ public class InstaProfileUI extends JPanel {
             });
             panel.add(lblBack);
         } else {
-            JButton btnLogout = new JButton("Huir");
+            JButton btnLogout = new BotonRojo("Huir");
             btnLogout.setBounds(310, 10, 70, 25);
-            estilizarBotonPequeno(btnLogout);
             btnLogout.addActionListener(e -> {
                 int resp = JOptionPane.showConfirmDialog(
                         this,
@@ -133,7 +135,7 @@ public class InstaProfileUI extends JPanel {
         lblFoto.setForeground(Color.GRAY);
         panel.add(lblFoto);
 
-        lblStats = new JLabel("0 Evidencias   0 Acosadores   0 Víctimas");
+        lblStats = new JLabel("0 Evidencias    0 Acosadores    0 Víctimas");
         lblStats.setFont(new Font("Comic Sans MS", Font.BOLD, 11));
         lblStats.setForeground(COLOR_TEXT);
         lblStats.setHorizontalAlignment(SwingConstants.CENTER);
@@ -141,9 +143,8 @@ public class InstaProfileUI extends JPanel {
         panel.add(lblStats);
 
         if (viewer.equals(username)) {
-            JButton btnEdit = new JButton("Alterar Realidad");
+            JButton btnEdit = new BotonRojo("Alterar Realidad");
             btnEdit.setBounds(130, 110, 240, 30);
-            estilizarBoton(btnEdit);
             btnEdit.addActionListener(e -> {
                 Window window = SwingUtilities.getWindowAncestor(InstaProfileUI.this);
                 if (window instanceof JFrame) {
@@ -157,14 +158,12 @@ public class InstaProfileUI extends JPanel {
             });
             panel.add(btnEdit);
         } else {
-            JButton btnFollow = new JButton("Seguir");
+            JButton btnFollow = new BotonRojo("Seguir");
             btnFollow.setBounds(130, 110, 110, 30);
-            estilizarBoton(btnFollow);
             panel.add(btnFollow);
 
-            JButton btnVerTweets = new JButton("Ver Tweets");
+            JButton btnVerTweets = new BotonRojo("Ver Tweets");
             btnVerTweets.setBounds(250, 110, 120, 30);
-            estilizarBoton(btnVerTweets);
             panel.add(btnVerTweets);
 
             btnFollow.addActionListener(e -> {
@@ -211,7 +210,7 @@ public class InstaProfileUI extends JPanel {
                             String autor = (p.length > 1) ? p[1] : "(?)";
                             String fecha = (p.length > 2) ? p[2] : "(fecha)";
                             String contenido = (p.length > 3) ? p[3] : "";
-                            sb.append(autor).append(": '").append(contenido).append("'   [").append(fecha).append("]\n\n");
+                            sb.append(autor).append(": '").append(contenido).append("'    [").append(fecha).append("]\n\n");
                         }
                         JTextArea area = new JTextArea(sb.toString());
                         area.setEditable(false);
@@ -372,27 +371,6 @@ public class InstaProfileUI extends JPanel {
         }
     }
 
-    private void abrirPostFeed(ArrayList<String[]> allPosts, int startIndex) {
-        Window window = SwingUtilities.getWindowAncestor(this);
-        if (window instanceof JFrame) {
-            JFrame frame = (JFrame) window;
-
-            Runnable backAction = () -> {
-                frame.setContentPane(InstaProfileUI.this);
-                frame.pack();
-                frame.setLocationRelativeTo(null);
-                frame.revalidate();
-                frame.repaint();
-            };
-
-            InstaPostUI postUI = new InstaPostUI(viewer, allPosts, startIndex, backAction);
-            frame.setContentPane(postUI);
-            frame.pack();
-            frame.revalidate();
-            frame.repaint();
-        }
-    }
-
     private JPanel crearBarraNavegacionInferior() {
         JPanel bar = new JPanel(new GridLayout(1, 4));
         bar.setBackground(new Color(20, 20, 20));
@@ -472,136 +450,110 @@ public class InstaProfileUI extends JPanel {
             imagesFolder.mkdirs();
         }
 
-        final String usersRootCanonical = safeCanonical(usersRoot);
-        final String userRootCanonical = safeCanonical(userRoot);
-        final String imagesFolderCanonical = safeCanonical(imagesFolder);
+        JFileChooser fc = new JFileChooser(imagesFolder);
+        fc.setDialogTitle("Selecciona la evidencia");
+        fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Imágenes", "jpg", "png", "jpeg", "gif", "bmp", "webp"));
 
-        JFileChooser fileChooser = new JFileChooser(imagesFolder) {
-            @Override
-            public void approveSelection() {
-                File sel = getSelectedFile();
-                if (sel != null) {
-                    try {
-                        String selCan = sel.getCanonicalPath();
+        int r = fc.showOpenDialog(this);
+        if (r != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
 
-                        if (selCan.startsWith(usersRootCanonical) && !selCan.startsWith(userRootCanonical)) {
-                            JOptionPane.showMessageDialog(this,
-                                    "Acceso denegado: no puedes seleccionar archivos dentro de la carpeta de otro usuario.",
-                                    "Acceso Denegado",
-                                    JOptionPane.WARNING_MESSAGE);
-                            return;
-                        }
-                    } catch (IOException ex) {
-                        JOptionPane.showMessageDialog(this,
-                                "Error verificando la ruta seleccionada.",
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                }
-                super.approveSelection();
-            }
+        File selected = fc.getSelectedFile();
+        String caption = JOptionPane.showInputDialog(this, "Escribe una descripción:", "Nuevo Post", JOptionPane.PLAIN_MESSAGE);
+        if (caption == null) {
+            caption = "";
+        }
 
-            @Override
-            public void setCurrentDirectory(File dir) {
-                if (dir != null) {
-                    try {
-                        String dirCan = dir.getCanonicalPath();
-                        if (dirCan.startsWith(usersRootCanonical) && !dirCan.startsWith(userRootCanonical)) {
-                            super.setCurrentDirectory(imagesFolder);
-                            return;
-                        }
-                    } catch (IOException ex) {
-                        super.setCurrentDirectory(imagesFolder);
-                        return;
-                    }
-                }
-                super.setCurrentDirectory(dir);
-            }
-        };
+        try {
+            instaManager manager = instaController.getInstance().getInsta();
+            manager.setLoggedUser(username);
 
-        fileChooser.setDialogTitle("Selecciona la evidencia (no puedes acceder a carpetas de otros usuarios)");
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes", "jpg", "png", "jpeg", "gif", "bmp", "webp"));
+            String unique = System.currentTimeMillis() + "_" + selected.getName();
+            File dest = new File(imagesFolder, unique);
 
-        fileChooser.addPropertyChangeListener(evt -> {
-            if (JFileChooser.DIRECTORY_CHANGED_PROPERTY.equals(evt.getPropertyName())) {
-                Object newVal = evt.getNewValue();
-                if (newVal instanceof File) {
-                    File newDir = (File) newVal;
-                    try {
-                        String newCan = newDir.getCanonicalPath();
-                        if (newCan.startsWith(usersRootCanonical) && !newCan.startsWith(userRootCanonical)) {
-                            SwingUtilities.invokeLater(() -> {
-                                fileChooser.setCurrentDirectory(imagesFolder);
-                                JOptionPane.showMessageDialog(this,
-                                        "No puedes acceder a carpetas de otros usuarios.",
-                                        "Acceso Denegado",
-                                        JOptionPane.WARNING_MESSAGE);
-                            });
-                        }
-                    } catch (IOException ex) {
-                        SwingUtilities.invokeLater(() -> fileChooser.setCurrentDirectory(imagesFolder));
-                    }
-                }
-            }
-        });
-
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-
+            boolean sameFile = false;
             try {
-                String selCan = selectedFile.getCanonicalPath();
-                if (selCan.startsWith(usersRootCanonical) && !selCan.startsWith(userRootCanonical)) {
-                    JOptionPane.showMessageDialog(this,
-                            "Acceso denegado: no puedes seleccionar archivos dentro de la carpeta de otro usuario.",
-                            "Acceso Denegado",
-                            JOptionPane.WARNING_MESSAGE);
-                    return;
+                if (dest.exists()) {
+                    sameFile = java.nio.file.Files.isSameFile(selected.toPath(), dest.toPath());
                 }
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Error verificando la ruta seleccionada.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+                if (!sameFile) {
+                    File[] all = imagesFolder.listFiles();
+                    if (all != null) {
+                        for (File f : all) {
+                            try {
+                                if (java.nio.file.Files.isSameFile(selected.toPath(), f.toPath())) {
+                                    sameFile = true;
+                                    dest = f;
+                                    break;
+                                }
+                            } catch (Exception ex) {
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                sameFile = false;
             }
 
-            String caption = JOptionPane.showInputDialog(this, "Escribe una descripción:", "Nuevo Post", JOptionPane.PLAIN_MESSAGE);
-            if (caption == null) {
-                caption = "";
-            }
+            if (!sameFile) {
+                String srcHash = sha1OfFile(selected);
+                boolean match = false;
 
-            try {
-                File destDir = imagesFolder;
-                if (!destDir.exists()) {
-                    destDir.mkdirs();
+                File[] all = imagesFolder.listFiles();
+                if (all != null) {
+                    for (File f : all) {
+                        if (!f.isFile()) {
+                            continue;
+                        }
+                        if (srcHash.equals(sha1OfFile(f))) {
+                            dest = f;
+                            match = true;
+                            break;
+                        }
+                    }
                 }
 
-                String uniqueName = System.currentTimeMillis() + "_" + selectedFile.getName();
-                File destFile = new File(destDir, uniqueName);
-
-                if (!selectedFile.getCanonicalPath().equals(destFile.getCanonicalPath())) {
-                    java.nio.file.Files.copy(selectedFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                if (!match) {
+                    java.nio.file.Path srcP = selected.toPath();
+                    java.nio.file.Path dstP = dest.toPath();
+                    try {
+                        if (!srcP.toRealPath().equals(dstP.getParent().toRealPath().resolve(dstP.getFileName()))) {
+                            java.nio.file.Files.copy(srcP, dstP, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        } else {
+                            dest = selected;
+                        }
+                    } catch (Exception ex) {
+                        java.nio.file.Files.copy(srcP, dstP, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    }
                 }
-
-                instaManager manager = instaController.getInstance().getInsta();
-                manager.setLoggedUser(username);
-                manager.addPost(destFile.getAbsolutePath(), username, caption);
-
-                JOptionPane.showMessageDialog(this, "Subido con éxito.");
-                cargarDatosPerfil();
-                cargarPostsEnGrid();
-
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Error al subir: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
+
+            manager.addPost(dest.getAbsolutePath(), username, caption);
+            JOptionPane.showMessageDialog(this, "Post subido.");
+            cargarDatosPerfil();
+            cargarPostsEnGrid();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
         }
     }
 
-    private String safeCanonical(File f) {
-        try {
-            return f.getCanonicalPath();
-        } catch (IOException ex) {
-            return f.getAbsolutePath();
+    private static String sha1OfFile(File f) throws Exception {
+        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-1");
+        java.io.InputStream is = new java.io.FileInputStream(f);
+        byte[] buf = new byte[8192];
+        int r;
+        while ((r = is.read(buf)) > 0) {
+            md.update(buf, 0, r);
         }
+        is.close();
+        byte[] dig = md.digest();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : dig) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     private JButton crearBotonNav(String texto, String emoji) {
@@ -651,12 +603,10 @@ public class InstaProfileUI extends JPanel {
 
             ArrayList<String[]> posts = manager.getPosts(username);
             int evidencias = (posts == null) ? 0 : posts.size();
-
             int acosadores = manager.getFollowersCount(username);
-
             int victimas = manager.getFollowingCount(username);
 
-            lblStats.setText(evidencias + " Evidencias   " + acosadores + " Acosadores   " + victimas + " Víctimas");
+            lblStats.setText(evidencias + " Evidencias    " + acosadores + " Acosadores    " + victimas + " Víctimas");
 
         } catch (IOException e) {
             lblName.setText("Error de conexión.");
@@ -675,21 +625,42 @@ public class InstaProfileUI extends JPanel {
         }
     }
 
-    private void estilizarBoton(JButton btn) {
-        btn.setBackground(new Color(30, 30, 30));
-        btn.setForeground(COLOR_TEXT);
-        btn.setFont(new Font("Comic Sans MS", Font.BOLD, 12));
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
+    private class BotonRojo extends JButton {
 
-    private void estilizarBotonPequeno(JButton btn) {
-        btn.setBackground(COLOR_BTN);
-        btn.setForeground(Color.BLACK);
-        btn.setFont(new Font("Comic Sans MS", Font.BOLD, 11));
-        btn.setFocusPainted(false);
-        btn.setBorder(null);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        public BotonRojo(String text) {
+            super(text);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+
+            setBackground(COLOR_BTN);
+            setForeground(Color.WHITE);
+            setFont(FONT_CAOS);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    setBackground(COLOR_BTN_HOVER);
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    setBackground(COLOR_BTN);
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+
+            super.paintComponent(g2);
+            g2.dispose();
+        }
     }
 }

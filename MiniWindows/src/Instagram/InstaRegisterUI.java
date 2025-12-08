@@ -13,6 +13,9 @@ import java.io.IOException;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.plaf.basic.BasicComboBoxUI;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
 
 /**
  *
@@ -34,6 +37,7 @@ public class InstaRegisterUI extends JPanel {
 
     private final Color COLOR_BG = Color.BLACK;
     private final Color COLOR_BTN = new Color(255, 69, 0);
+    private final Color COLOR_BTN_HOVER = new Color(200, 50, 0);
     private final Color COLOR_TEXT = Color.WHITE;
     private final Color COLOR_BORDER = new Color(100, 100, 100);
     private final Font FONT_CAOS = new Font("Comic Sans MS", Font.BOLD, 12);
@@ -45,7 +49,6 @@ public class InstaRegisterUI extends JPanel {
         setLayout(null);
         setBackground(COLOR_BG);
         setPreferredSize(new Dimension(400, 650));
-
         initComponentes();
     }
 
@@ -73,13 +76,9 @@ public class InstaRegisterUI extends JPanel {
         lblFotoPreview.setText("Tu Cara");
         add(lblFotoPreview);
 
-        JButton btnAddFoto = new JButton("Subir Evidencia");
+        JButton btnAddFoto = new BotonRojo("Subir Evidencia");
         btnAddFoto.setBounds(130, 200, 140, 25);
-        btnAddFoto.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
-        btnAddFoto.setBackground(Color.DARK_GRAY);
-        btnAddFoto.setForeground(Color.WHITE);
-        btnAddFoto.setFocusPainted(false);
-        btnAddFoto.addActionListener(e -> seleccionarFoto());
+        btnAddFoto.addActionListener(e -> seleccionarFotoPerfil());
         add(btnAddFoto);
 
         int yStart = 240;
@@ -89,7 +88,6 @@ public class InstaRegisterUI extends JPanel {
         txtUsername = crearCampoTexto("Alias Malvado", yStart + gap);
         txtPassword = crearCampoPassword("Secreto Oscuro", yStart + gap * 2);
 
-        // Edad
         txtEdad = new JTextField();
         txtEdad.setBounds(50, yStart + gap * 3, 140, 40);
         estilizarCampo(txtEdad, "Edad");
@@ -97,19 +95,17 @@ public class InstaRegisterUI extends JPanel {
 
         cbGenero = new JComboBox<>(new String[]{"M", "F"});
         cbGenero.setBounds(210, yStart + gap * 3, 140, 40);
+        cbGenero.setUI(new DarkComboBoxUI());
         cbGenero.setBackground(new Color(30, 30, 30));
         cbGenero.setForeground(COLOR_TEXT);
         cbGenero.setFont(FONT_CAOS);
         cbGenero.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER), "Género", 0, 0, new Font("Comic Sans MS", Font.PLAIN, 12), Color.LIGHT_GRAY));
+                BorderFactory.createLineBorder(COLOR_BORDER), "Género", 0, 0,
+                new Font("Comic Sans MS", Font.PLAIN, 12), Color.LIGHT_GRAY));
         add(cbGenero);
 
-        btnRegistrar = new JButton("Invocar Cuenta");
+        btnRegistrar = new BotonRojo("Invocar Cuenta");
         btnRegistrar.setBounds(50, yStart + gap * 4 + 10, 300, 35);
-        btnRegistrar.setBackground(COLOR_BTN);
-        btnRegistrar.setForeground(Color.BLACK);
-        btnRegistrar.setFont(new Font("Comic Sans MS", Font.BOLD, 16));
-        btnRegistrar.setFocusPainted(false);
         btnRegistrar.addActionListener(e -> realizarRegistro());
         add(btnRegistrar);
 
@@ -123,10 +119,8 @@ public class InstaRegisterUI extends JPanel {
         lblBackLogin.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-
                 Window window = SwingUtilities.getWindowAncestor(InstaRegisterUI.this);
-                if (window instanceof JFrame) {
-                    JFrame frame = (JFrame) window;
+                if (window instanceof JFrame frame) {
                     frame.setContentPane(new InstaLoginUI());
                     frame.pack();
                     frame.setLocationRelativeTo(null);
@@ -145,9 +139,7 @@ public class InstaRegisterUI extends JPanel {
         txt.setFont(new Font("Comic Sans MS", Font.PLAIN, 14));
         txt.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(COLOR_BORDER),
-                titulo,
-                0,
-                0,
+                titulo, 0, 0,
                 new Font("Comic Sans MS", Font.PLAIN, 12),
                 Color.LIGHT_GRAY));
     }
@@ -168,44 +160,50 @@ public class InstaRegisterUI extends JPanel {
         return txt;
     }
 
-    private void seleccionarFoto() {
+    private void seleccionarFotoPerfil() {
+
         final File usersRoot = new File("src\\Z\\Usuarios");
 
-        String typedUsername = txtUsername.getText().trim();
-        final String targetUsername = (typedUsername.isEmpty()) ? "" : typedUsername;
-
-        final File startDir = (targetUsername.isEmpty())
-                ? usersRoot
-                : new File(usersRoot, targetUsername + File.separator + "Mis Imagenes");
-
-        if (!startDir.exists()) {
+        String osUser = null;
+        try {
+            if (Logica.ManejoUsuarios.UserLogged.getInstance().getUserLogged() != null) {
+                osUser = Logica.ManejoUsuarios.UserLogged.getInstance().getUserLogged().getName();
+            }
+        } catch (Exception ex) {
+            osUser = null;
+        }
+        if (osUser == null || osUser.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay usuario del sistema identificado.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
-        final String usersRootCanonical = safeCanonical(usersRoot);
-        final String userRootCanonical = targetUsername.isEmpty() ? null : safeCanonical(new File(usersRoot, targetUsername));
+        final File userRoot = new File(usersRoot, osUser);
+        final File imagesFolder = new File(userRoot, "Mis Imagenes");
+        if (!imagesFolder.exists()) imagesFolder.mkdirs();
 
-        JFileChooser fileChooser = new JFileChooser(startDir.exists() ? startDir : usersRoot) {
+        final String usersRootCanonical = safeCanonical(usersRoot);
+        final String userRootCanonical = safeCanonical(userRoot);
+
+        JFileChooser fileChooser = new JFileChooser(imagesFolder) {
             @Override
             public void approveSelection() {
                 File sel = getSelectedFile();
                 if (sel != null) {
                     try {
                         String selCan = sel.getCanonicalPath();
-
-                        if (selCan.startsWith(usersRootCanonical)) {
-                            if (userRootCanonical != null && !selCan.startsWith(userRootCanonical)) {
-                                JOptionPane.showMessageDialog(this,
-                                        "Acceso denegado: no puedes seleccionar imágenes de la carpeta de otro usuario.",
-                                        "Acceso Denegado",
-                                        JOptionPane.WARNING_MESSAGE);
-                                return;
-                            }
+                        if (selCan.startsWith(usersRootCanonical)
+                                && !selCan.startsWith(userRootCanonical)) {
+                            JOptionPane.showMessageDialog(this,
+                                    "Acceso denegado: solo puedes seleccionar imágenes de tu carpeta.",
+                                    "Acceso Denegado",
+                                    JOptionPane.WARNING_MESSAGE);
+                            return;
                         }
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(this,
                                 "Error verificando la ruta seleccionada.",
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                                "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 }
@@ -217,75 +215,66 @@ public class InstaRegisterUI extends JPanel {
                 if (dir != null) {
                     try {
                         String dirCan = dir.getCanonicalPath();
-                        if (dirCan.startsWith(usersRootCanonical)) {
-                            if (userRootCanonical != null && !dirCan.startsWith(userRootCanonical)) {
-                                super.setCurrentDirectory(usersRoot);
-                                return;
-                            }
+                        if (dirCan.startsWith(usersRootCanonical)
+                                && !dirCan.startsWith(userRootCanonical)) {
+                            super.setCurrentDirectory(imagesFolder);
+                            return;
                         }
                     } catch (IOException ex) {
+                        super.setCurrentDirectory(imagesFolder);
+                        return;
                     }
                 }
                 super.setCurrentDirectory(dir);
             }
         };
 
-        fileChooser.setDialogTitle("Seleccionar Evidencia (no puedes elegir imágenes de otros usuarios)");
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes (JPG, PNG, JPEG, GIF, BMP, WEBP)", "jpg", "png", "jpeg", "gif", "bmp", "webp"));
+        fileChooser.setDialogTitle("Seleccionar foto de perfil (solo desde tu carpeta)");
+        fileChooser.setFileFilter(new FileNameExtensionFilter(
+                "Imágenes (JPG, PNG, JPEG, GIF, BMP, WEBP)",
+                "jpg", "png", "jpeg", "gif", "bmp", "webp"));
 
         int res = fileChooser.showOpenDialog(this);
-        if (res == JFileChooser.APPROVE_OPTION) {
-            File sel = fileChooser.getSelectedFile();
-            if (sel == null) {
+        if (res != JFileChooser.APPROVE_OPTION) return;
+
+        File sel = fileChooser.getSelectedFile();
+        if (sel == null) return;
+
+        try {
+            String selCan = sel.getCanonicalPath();
+            if (selCan.startsWith(usersRootCanonical)
+                    && !selCan.startsWith(userRootCanonical)) {
+                JOptionPane.showMessageDialog(this,
+                        "Acceso denegado: solo puedes seleccionar imágenes de tu carpeta.",
+                        "Acceso Denegado",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            try {
-                String selCan = sel.getCanonicalPath();
+            int dot = sel.getName().lastIndexOf('.');
+            String ext = (dot > 0) ? sel.getName().substring(dot + 1) : "jpg";
+            File dest = new File(userRoot, "profile." + ext);
 
-                if (selCan.startsWith(usersRootCanonical)) {
-                    if (userRootCanonical != null && !selCan.startsWith(userRootCanonical)) {
-                        JOptionPane.showMessageDialog(this,
-                                "Acceso denegado: no puedes seleccionar imágenes de la carpeta de otro usuario.",
-                                "Acceso Denegado",
-                                JOptionPane.WARNING_MESSAGE);
-                        return;
-                    }
-                }
-
-                String finalUsername = targetUsername;
-                if (finalUsername.isEmpty()) {
-
-                    finalUsername = JOptionPane.showInputDialog(this, "Ingresa el alias donde guardar la imagen:", "Alias del Usuario", JOptionPane.PLAIN_MESSAGE);
-                    if (finalUsername == null || finalUsername.trim().isEmpty()) {
-                        JOptionPane.showMessageDialog(this, "Debes especificar un alias para guardar la imagen.", "Operación cancelada", JOptionPane.WARNING_MESSAGE);
-                        return;
-                    }
-                    finalUsername = finalUsername.trim();
-                    txtUsername.setText(finalUsername);
-                }
-                File userDir = new File(usersRoot, finalUsername);
-                File misImgs = new File(userDir, "Mis Imagenes");
-                if (!misImgs.exists()) {
-                    misImgs.mkdirs();
-                }
-
-                String uniqueName = System.currentTimeMillis() + "_" + sel.getName();
-                File dest = new File(misImgs, uniqueName);
-
-                if (!sel.getCanonicalPath().equals(dest.getCanonicalPath())) {
-                    java.nio.file.Files.copy(sel.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                }
-
-                rutaFotoSeleccionada = dest.getAbsolutePath();
-                ImageIcon icon = new ImageIcon(rutaFotoSeleccionada);
-                Image img = icon.getImage().getScaledInstance(lblFotoPreview.getWidth(), lblFotoPreview.getHeight(), Image.SCALE_SMOOTH);
-                lblFotoPreview.setIcon(new ImageIcon(img));
-                lblFotoPreview.setText("");
-
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Error al procesar la imagen: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            if (!selCan.equals(dest.getCanonicalPath())) {
+                java.nio.file.Files.copy(sel.toPath(), dest.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
+
+            rutaFotoSeleccionada = dest.getAbsolutePath();
+
+            ImageIcon icon = new ImageIcon(rutaFotoSeleccionada);
+            Image img = icon.getImage().getScaledInstance(
+                    lblFotoPreview.getWidth(),
+                    lblFotoPreview.getHeight(),
+                    Image.SCALE_SMOOTH);
+
+            lblFotoPreview.setIcon(new ImageIcon(img));
+            lblFotoPreview.setText("");
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al procesar la imagen: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -305,7 +294,9 @@ public class InstaRegisterUI extends JPanel {
         char genero = cbGenero.getSelectedItem().toString().charAt(0);
 
         if (nombre.isEmpty() || username.isEmpty() || password.isEmpty() || edadStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "¡El vacío no es aceptable! Llena todo.", "Error Fatal", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "¡El vacío no es aceptable! Llena todo.", "Error Fatal",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -313,11 +304,15 @@ public class InstaRegisterUI extends JPanel {
         try {
             edad = Integer.parseInt(edadStr);
             if (edad < 13) {
-                JOptionPane.showMessageDialog(this, "Eres muy joven para la oscuridad (Min 13).", "Edad Inválida", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "Eres muy joven para la oscuridad (Min 13).",
+                        "Edad Inválida", JOptionPane.WARNING_MESSAGE);
                 return;
             }
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "La edad debe ser un número, no jeroglíficos.", "Error", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "La edad debe ser un número.", "Error",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -325,13 +320,18 @@ public class InstaRegisterUI extends JPanel {
             instaManager manager = instaController.getInstance().getInsta();
 
             if (manager.checkUserExistance(username)) {
-                JOptionPane.showMessageDialog(this, "Ese alias ya fue reclamado por otro demonio.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "Ese alias ya fue reclamado.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            manager.addNewUser(nombre, genero, username, password, edad, rutaFotoSeleccionada);
+            manager.addNewUser(nombre, genero, username, password, edad,
+                    rutaFotoSeleccionada);
 
-            JOptionPane.showMessageDialog(this, "¡Bienvenido a la legión! Tu alma es nuestra.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "¡Bienvenido a la legión!", "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
 
             txtNombre.setText("");
             txtUsername.setText("");
@@ -341,10 +341,105 @@ public class InstaRegisterUI extends JPanel {
             lblFotoPreview.setText("Tu Cara");
             rutaFotoSeleccionada = "";
 
-            lblBackLogin.dispatchEvent(new MouseEvent(lblBackLogin, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, 0, 0, 1, false));
+            lblBackLogin.dispatchEvent(new MouseEvent(lblBackLogin,
+                    MouseEvent.MOUSE_CLICKED,
+                    System.currentTimeMillis(),
+                    0, 0, 0, 1, false));
 
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error catastrófico: " + ex.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Error: " + ex.getMessage(),
+                    "Error Crítico", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private class DarkComboBoxUI extends BasicComboBoxUI {
+        @Override
+        protected JButton createArrowButton() {
+            JButton btn = new JButton();
+            btn.setBorder(BorderFactory.createEmptyBorder());
+            btn.setContentAreaFilled(false);
+            btn.setFocusPainted(false);
+
+            btn.setIcon(new Icon() {
+                @Override
+                public void paintIcon(Component c, Graphics g, int x, int y) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(COLOR_TEXT);
+
+                    int size = 8;
+                    int tx = x + (getIconWidth() - size) / 2;
+                    int ty = y + (getIconHeight() - size) / 2 + 2;
+                    g2.fillPolygon(
+                            new int[]{tx, tx + size, tx + size / 2},
+                            new int[]{ty, ty, ty + size / 2},
+                            3
+                    );
+                    g2.dispose();
+                }
+
+                @Override public int getIconWidth() { return 20; }
+                @Override public int getIconHeight() { return 20; }
+            });
+
+            return btn;
+        }
+
+        @Override
+        public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
+            g.setColor(new Color(30, 30, 30));
+            g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+        }
+
+        @Override
+        protected ComboPopup createPopup() {
+            return new BasicComboPopup(comboBox) {
+                @Override
+                protected JScrollPane createScroller() {
+                    JScrollPane scroller = super.createScroller();
+                    scroller.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
+                    list.setBackground(new Color(30, 30, 30));
+                    list.setForeground(COLOR_TEXT);
+                    return scroller;
+                }
+            };
+        }
+    }
+
+    private class BotonRojo extends JButton {
+
+        public BotonRojo(String text) {
+            super(text);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setBackground(COLOR_BTN);
+            setForeground(Color.BLACK);
+            setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) { setBackground(COLOR_BTN_HOVER); }
+
+                @Override
+                public void mouseExited(MouseEvent e) { setBackground(COLOR_BTN); }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+
+            super.paintComponent(g2);
+            g2.dispose();
         }
     }
 }

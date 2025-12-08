@@ -24,6 +24,10 @@ public class HashtagSearchUI extends JPanel {
     private final Color COLOR_BG = Color.BLACK;
     private final Color COLOR_TEXT = Color.WHITE;
     private final Color COLOR_BORDER = new Color(100, 100, 100);
+    
+    private final Color COLOR_BTN = new Color(255, 69, 0);
+    private final Color COLOR_BTN_HOVER = new Color(200, 50, 0);
+    private final Font FONT_CAOS = new Font("Comic Sans MS", Font.PLAIN, 12);
 
     public HashtagSearchUI(String currentUser) {
         this.currentUser = currentUser;
@@ -39,6 +43,7 @@ public class HashtagSearchUI extends JPanel {
         resultList = new JList<>(listModel);
         resultList.setBackground(new Color(20, 20, 20));
         resultList.setForeground(COLOR_TEXT);
+        resultList.setFont(FONT_CAOS);
         resultList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         resultList.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
         JScrollPane sp = new JScrollPane(resultList);
@@ -118,7 +123,7 @@ public class HashtagSearchUI extends JPanel {
         p.setPreferredSize(new Dimension(400, 70));
 
         JLabel lblBack = new JLabel("←");
-        lblBack.setForeground(new Color(255, 69, 0));
+        lblBack.setForeground(COLOR_BTN);
         lblBack.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblBack.setBounds(10, 12, 30, 30);
         lblBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -140,14 +145,13 @@ public class HashtagSearchUI extends JPanel {
         txt.setBounds(15, 40, 260, 25);
         txt.setBackground(new Color(30, 30, 30));
         txt.setForeground(COLOR_TEXT);
+        txt.setCaretColor(COLOR_TEXT); 
+        txt.setFont(FONT_CAOS);
+        txt.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
         p.add(txt);
 
-        JButton btn = new JButton("Buscar #");
+        JButton btn = new BotonRojo("Buscar #");
         btn.setBounds(285, 40, 90, 25);
-        btn.setBackground(new Color(30, 30, 30));
-        btn.setForeground(COLOR_TEXT);
-        btn.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.addActionListener(ae -> ejecutarBusqueda(txt.getText()));
         p.add(btn);
 
@@ -243,5 +247,44 @@ public class HashtagSearchUI extends JPanel {
         frame.setLocationRelativeTo(null);
         frame.revalidate();
         frame.repaint();
+    }
+
+    private class BotonRojo extends JButton {
+
+        public BotonRojo(String text) {
+            super(text);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            
+            setBackground(COLOR_BTN);
+            setForeground(Color.WHITE);
+            setFont(FONT_CAOS);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    setBackground(COLOR_BTN_HOVER);
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    setBackground(COLOR_BTN);
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+
+            super.paintComponent(g2);
+            g2.dispose();
+        }
     }
 }

@@ -1,11 +1,8 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Instagram;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,10 +11,6 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 
-/**
- *
- * @author esteb
- */
 public class VisibilidadProfileUI extends JPanel {
 
     private final String profileUser;
@@ -31,9 +24,11 @@ public class VisibilidadProfileUI extends JPanel {
 
     private final Color COLOR_BG = Color.BLACK;
     private final Color COLOR_BTN = new Color(255, 69, 0);
+    private final Color COLOR_BTN_HOVER = new Color(200, 50, 0);
     private final Color COLOR_TEXT = Color.WHITE;
     private final Color COLOR_BORDER = new Color(100, 100, 100);
     private final Font FONT_TEXT = new Font("Comic Sans MS", Font.PLAIN, 12);
+    private final Font FONT_CAOS = new Font("Comic Sans MS", Font.BOLD, 12);
 
     public VisibilidadProfileUI(String profileUser, String viewer) {
         this.profileUser = profileUser;
@@ -107,16 +102,15 @@ public class VisibilidadProfileUI extends JPanel {
         lblFoto.setForeground(Color.GRAY);
         panel.add(lblFoto);
 
-        lblStats = new JLabel("0 Evidencias   0 Acosadores   0 Víctimas");
+        lblStats = new JLabel("0 Evidencias    0 Acosadores    0 Víctimas");
         lblStats.setFont(new Font("Comic Sans MS", Font.BOLD, 11));
         lblStats.setForeground(COLOR_TEXT);
         lblStats.setHorizontalAlignment(SwingConstants.CENTER);
         lblStats.setBounds(120, 50, 260, 60);
         panel.add(lblStats);
 
-        JButton btnFollow = new JButton("Seguir");
+        JButton btnFollow = new BotonRojo("Seguir");
         btnFollow.setBounds(130, 110, 240, 30);
-        estilizarBoton(btnFollow);
         panel.add(btnFollow);
 
         lblName = new JLabel("Cargando nombre...");
@@ -322,7 +316,7 @@ public class VisibilidadProfileUI extends JPanel {
             ArrayList<String[]> posts = manager.getPosts(profileUser);
             int evidencias = (posts == null) ? 0 : posts.size();
 
-            lblStats.setText(evidencias + " Evidencias   " + followers + " Acosadores   " + following + " Víctimas");
+            lblStats.setText(evidencias + " Evidencias    " + followers + " Acosadores    " + following + " Víctimas");
 
             manager.setLoggedUser(viewer);
             boolean sigo = manager.isFollowing(profileUser);
@@ -495,7 +489,6 @@ public class VisibilidadProfileUI extends JPanel {
                         return;
                     }
 
-                    String path = selectedFile.getAbsolutePath();
                     String caption = JOptionPane.showInputDialog(this, "Escribe una descripción:", "Nuevo Post", JOptionPane.PLAIN_MESSAGE);
                     if (caption == null) {
                         caption = "";
@@ -569,12 +562,42 @@ public class VisibilidadProfileUI extends JPanel {
         return btn;
     }
 
-    private void estilizarBoton(JButton btn) {
-        btn.setBackground(new Color(30, 30, 30));
-        btn.setForeground(COLOR_TEXT);
-        btn.setFont(new Font("Comic Sans MS", Font.BOLD, 12));
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    private class BotonRojo extends JButton {
+
+        public BotonRojo(String text) {
+            super(text);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+
+            setBackground(COLOR_BTN);
+            setForeground(Color.WHITE);
+            setFont(FONT_CAOS);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    setBackground(COLOR_BTN_HOVER);
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    setBackground(COLOR_BTN);
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+
+            super.paintComponent(g2);
+            g2.dispose();
+        }
     }
 }
