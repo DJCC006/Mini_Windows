@@ -35,13 +35,13 @@ public class LogInWindow  extends sesionManager{
         
         
         //Obtencion de informacion de componentes graficos de pantalla local del usuario
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice gd =ge.getDefaultScreenDevice();
-        //screen.setUndecorated(true);//limpieza inicial
+        //GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        //GraphicsDevice gd =ge.getDefaultScreenDevice();
+        screen.setUndecorated(true);//limpieza inicial
         
         //----NO OLVIDAR VOLVER A ACTIVAR ESTO----
-        gd.setFullScreenWindow(null);//linea que pone las cosas en pantalla completa//screen
-        
+       // gd.setFullScreenWindow(screen);//linea que pone las cosas en pantalla completa//screen
+        //screen.requestFocusInWindow();
         
         screen.setContentPane(panelFondo);
         screen.setTitle("Pantall Inicio Sesion");
@@ -83,10 +83,10 @@ public class LogInWindow  extends sesionManager{
         labelMod labelUser = new labelMod(usuarioIcon, transparency);
         labelUser.setBounds(680, 190, 200, 200);
         
-        JLabel nameUser= new JLabel("ADMIN");
-        nameUser.setFont(new Font("Arial", Font.BOLD, 50));
+        JLabel nameUser= new JLabel("INICIAR SESION");
+        nameUser.setFont(new Font("Arial", Font.BOLD, 45));
         nameUser.setForeground(Color.WHITE);
-        nameUser.setBounds(690, 310, 300, 200);
+        nameUser.setBounds(600, 310, 500, 200);
         
         screen.add(nameUser);
         screen.add(labelUser);

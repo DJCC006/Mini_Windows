@@ -87,6 +87,7 @@ public class fileExplorer extends JPanel {
 
         //Creacion de rutas dinamicas
         raizUsuario = getRutaCondicionada();
+        
         recycleBin = setUserRoute + "Papelera";
 
         File papelera = new File(recycleBin);
@@ -119,7 +120,7 @@ public class fileExplorer extends JPanel {
         styleScrollPane((JScrollPane) splitPane.getLeftComponent());
         styleScrollPane((JScrollPane) splitPane.getRightComponent());
 
-        pathLabel = new JLabel("Ruta Actual: " + raizUsuario);
+        pathLabel = new JLabel("Ruta Actual: " + formatDisplayPath(raizUsuario));
         pathLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 5));
         // add(pathLabel, BorderLayout.WEST);
 
@@ -161,11 +162,14 @@ public class fileExplorer extends JPanel {
     }
 
     private String formatDisplayPath(String userString) {
+        
         int rootIndex = userString.indexOf(raizUsuario);
-        if (userString.length() > 4) {
-            return userString.substring(4);
+        if (rootIndex!=-1) {
+            System.out.println(rootIndex);
+            return userString.substring(rootIndex);
         }
 
+        System.out.println(rootIndex);
 //        
 //        if(rootIndex!=-1){
 //            return userString.substring(rootIndex);
@@ -206,7 +210,10 @@ public class fileExplorer extends JPanel {
         // Se vuelve a agregar el panel de sort porque el removeAll lo quita
         JPanel panelSort = new JPanel(new BorderLayout());
         panelSort.setBackground(COLOR_PANEL);
-        pathLabel.setText("Ruta Actual: " + formatDisplayPath(carpeta.getAbsolutePath()));
+        try{
+            pathLabel.setText("Ruta Actual: " + formatDisplayPath(carpeta.getAbsolutePath()));
+        }catch(Exception e){}
+        
         pathLabel.setForeground(COLOR_TEXTO);
         pathLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 5));
         panelSort.add(pathLabel, BorderLayout.WEST);
@@ -242,11 +249,11 @@ public class fileExplorer extends JPanel {
     private void borrarFiles() {
         int[] selectedRows = fileTable.getSelectedRows();
         if (selectedRows.length == 0) {
-            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a borrar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a borrar", "Atencion", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        int confirmacion = JOptionPane.showConfirmDialog(null, "¿Desea borrar permanente los archivos seleccionados?", "Confirmar Eliminacion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        int confirmacion = JOptionPane.showConfirmDialog(panelFondo, "¿Desea borrar permanente los archivos seleccionados?", "Confirmar Eliminacion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
             papeleraFiles.clear();
@@ -271,7 +278,7 @@ public class fileExplorer extends JPanel {
                 organizerFiles.clear();
                 displayContents(new File(currentDirPath));
                 updateTree(new File(currentDirPath));
-                JOptionPane.showMessageDialog(this, "Elementos eliminados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, "Elementos eliminados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
@@ -299,11 +306,11 @@ public class fileExplorer extends JPanel {
     private void restuararFiles() {
         int[] selectedRows = fileTable.getSelectedRows();
         if (selectedRows.length == 0) {
-            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a borrar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a borrar", "Atencion", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        int confirmacion = JOptionPane.showConfirmDialog(null, "¿Desea restaurar los archivos seleccionados?", "Confirmar Restauracion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        int confirmacion = JOptionPane.showConfirmDialog(panelFondo, "¿Desea restaurar los archivos seleccionados?", "Confirmar Restauracion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
             papeleraFiles.clear();
@@ -328,7 +335,7 @@ public class fileExplorer extends JPanel {
                 organizerFiles.clear();
                 displayContents(new File(currentDirPath));
                 updateTree(new File(currentDirPath));
-                JOptionPane.showMessageDialog(this, "Elementos restaurados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, "Elementos restaurados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
@@ -361,7 +368,7 @@ public class fileExplorer extends JPanel {
             try {
                 realizarRenombre();
             } catch (nullSelected nullmsg2) {
-                JOptionPane.showMessageDialog(this, nullmsg2.getMessage(), "Atencion", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, nullmsg2.getMessage(), "Atencion", JOptionPane.INFORMATION_MESSAGE);
             }
         });
         toolBar.add(renameBt);
@@ -377,7 +384,7 @@ public class fileExplorer extends JPanel {
             try {
                 openSelectedFile();
             } catch (nullSelected nullmsg) {
-                JOptionPane.showMessageDialog(this, nullmsg.getMessage(), "Atencion", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, nullmsg.getMessage(), "Atencion", JOptionPane.INFORMATION_MESSAGE);
             }
 
         });
@@ -423,29 +430,31 @@ public class fileExplorer extends JPanel {
         String rutaUsuarios = "src\\Z\\Usuarios\\" + userName;
 
         //ejecutar proceso de copiado
-        copySelectedFilesO();//ver si no tira exception
-
-        //set de directorio de usuario logeado
-        try {
-            folderChooser.setCurrentDirectory(new File(rutaUsuarios));
-        } catch (Exception ex) {
-
-        }
-
-        int userSelection = folderChooser.showOpenDialog(this);
-
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File destinationFolder = folderChooser.getSelectedFile();
-
+        if(copySelectedFilesO()){
+            //set de directorio de usuario logeado
             try {
-                String destinationRute = destinationFolder.getCanonicalPath();
-                File dirDestino = new File(destinationRute);
-                pasteFilesO(destinationFolder);
-            } catch (Exception e3) {
-            };
+                folderChooser.setCurrentDirectory(new File(rutaUsuarios));
+            } catch (Exception ex) {
 
-            //displayContents(new File(currentDirPath));
+            }
+
+            int userSelection = folderChooser.showOpenDialog(panelFondo);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File destinationFolder = folderChooser.getSelectedFile();
+
+                try {
+                    String destinationRute = destinationFolder.getCanonicalPath();
+                    File dirDestino = new File(destinationRute);
+                    pasteFilesO(destinationFolder);
+                } catch (Exception e3) {
+                };
+
+                //displayContents(new File(currentDirPath));
+            }
         }
+
+        
     }
 
     private boolean renombrar(File archivoOriginal, String nuevoNombre) {
@@ -453,16 +462,16 @@ public class fileExplorer extends JPanel {
         File nuevoArchivo = new File(dirPadre, nuevoNombre);
 
         if (nuevoArchivo.exists()) {
-            JOptionPane.showMessageDialog(this, "Ya existe un archivo/directorio con este nombre");
+            JOptionPane.showMessageDialog(panelFondo, "Ya existe un archivo/directorio con este nombre");
             return false;
         }
 
         boolean exito = archivoOriginal.renameTo(nuevoArchivo);
 
         if (exito) {
-            JOptionPane.showMessageDialog(this, "Archivo renombrado con exito");
+            JOptionPane.showMessageDialog(panelFondo, "Archivo renombrado con exito");
         } else {
-            JOptionPane.showMessageDialog(this, "Erro al intentar renombrar el archivo");
+            JOptionPane.showMessageDialog(panelFondo, "Erro al intentar renombrar el archivo");
         }
         return exito;
     }
@@ -491,7 +500,7 @@ public class fileExplorer extends JPanel {
             nameBase = nameActual.substring(0, nameActual.lastIndexOf('.'));
         }
 
-        String newName = JOptionPane.showInputDialog(null, "Ingrese el nuevo nombre: ");
+        String newName = JOptionPane.showInputDialog(panelFondo, "Ingrese el nuevo nombre: ");
 
         if (newName != null && !newName.trim().isEmpty()) {
             String newNameFinal = newName.trim() + extension;
@@ -505,7 +514,7 @@ public class fileExplorer extends JPanel {
         } else if (newName != null && newName.equals(nameActual)) {
 
         } else if (newName != null) {
-            JOptionPane.showMessageDialog(null, "El nuevo nombre no puede estar vacio");
+            JOptionPane.showMessageDialog(panelFondo, "El nuevo nombre no puede estar vacio");
         }
 
     }
@@ -515,7 +524,7 @@ public class fileExplorer extends JPanel {
         chooser.setDialogTitle("IMPORTAR ARCHIVOS");
         chooser.setMultiSelectionEnabled(true);
 
-        int result = chooser.showOpenDialog(this);//posiblemente aqui agruegar el screen de pantalla principal
+        int result = chooser.showOpenDialog(panelFondo);//posiblemente aqui agruegar el screen de pantalla principal
 
         if (result == JFileChooser.APPROVE_OPTION) {
             File[] selectedFiles = chooser.getSelectedFiles();
@@ -540,7 +549,7 @@ public class fileExplorer extends JPanel {
     }
 
     private void createNewFolder() {
-        String folderName = JOptionPane.showInputDialog(this, "Ingresa el nombre de la nueva carpeta:",
+        String folderName = JOptionPane.showInputDialog(panelFondo, "Ingresa el nombre de la nueva carpeta:",
                 "Crear Carpeta",
                 JOptionPane.PLAIN_MESSAGE);
 
@@ -548,7 +557,7 @@ public class fileExplorer extends JPanel {
             File newFolder = new File(currentDirPath, folderName.trim());
 
             if (newFolder.exists()) {
-                JOptionPane.showMessageDialog(this,
+                JOptionPane.showMessageDialog(panelFondo,
                         "La Carpeta ya existe",
                         "Error de Creacion",
                         JOptionPane.ERROR_MESSAGE);
@@ -557,7 +566,7 @@ public class fileExplorer extends JPanel {
                     displayContents(new File(currentDirPath));
                     updateTree(new File(currentDirPath));
                 } else {
-                    JOptionPane.showMessageDialog(this, "Error al crear la carpeta",
+                    JOptionPane.showMessageDialog(panelFondo, "Error al crear la carpeta",
                             "Error de creacion",
                             JOptionPane.ERROR_MESSAGE);
                 }
@@ -566,7 +575,7 @@ public class fileExplorer extends JPanel {
     }
 
     private void createNewFile() {
-        String fileName = JOptionPane.showInputDialog(this,
+        String fileName = JOptionPane.showInputDialog(panelFondo,
                 "Ingresa el nombre de nuevo archivo (ej: documento.txt):",
                 JOptionPane.PLAIN_MESSAGE);
 
@@ -579,7 +588,7 @@ public class fileExplorer extends JPanel {
             File newFile = new File(currentDirPath, finalFileName);
 
             if (newFile.exists()) {
-                JOptionPane.showMessageDialog(this,
+                JOptionPane.showMessageDialog(panelFondo,
                         "El archivo ya existe",
                         "Error de Creacion",
                         JOptionPane.ERROR_MESSAGE);
@@ -588,13 +597,13 @@ public class fileExplorer extends JPanel {
                     if (newFile.createNewFile()) {
                         displayContents(new File(currentDirPath));
                     } else {
-                        JOptionPane.showMessageDialog(this,
+                        JOptionPane.showMessageDialog(panelFondo,
                                 "Error al crear el archivo",
                                 "Error de Creacion",
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(this,
+                    JOptionPane.showMessageDialog(panelFondo,
                             "Error de E/S al crear el archivo: " + ex.getMessage(),
                             "Error de Creacion",
                             JOptionPane.ERROR_MESSAGE);
@@ -617,7 +626,7 @@ public class fileExplorer extends JPanel {
         File file = (File) fileTable.getValueAt(selectedRow, 0);
 
         if (file.isDirectory()) {
-            JOptionPane.showMessageDialog(this, "Solamente abrir ARCHIVOS, no directorios", "Atencion", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Solamente abrir ARCHIVOS, no directorios", "Atencion", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -664,7 +673,7 @@ public class fileExplorer extends JPanel {
 
             }
         } else {
-            JOptionPane.showMessageDialog(null, "Extension de archivo no soportada por sistema", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Extension de archivo no soportada por sistema", "Aviso", JOptionPane.INFORMATION_MESSAGE);
         }
 
     }
@@ -672,7 +681,7 @@ public class fileExplorer extends JPanel {
     private void copySelectedFiles(boolean isCut) {
         int[] selectedRows = fileTable.getSelectedRows();
         if (selectedRows.length == 0) {
-            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a copiar/cortar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a copiar/cortar", "Atencion", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -685,14 +694,14 @@ public class fileExplorer extends JPanel {
         }
 
         String operation = isCut ? "Cortar" : "Copiar";
-        JOptionPane.showMessageDialog(this, selectedRows.length + "elemento(s) preparado (s) para " + operation + ".", "Portapapeles", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(panelFondo, selectedRows.length + "elemento(s) preparado (s) para " + operation + ".", "Portapapeles", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void copySelectedFilesO() {
+    private boolean copySelectedFilesO() {
         int[] selectedRows = fileTable.getSelectedRows();
         if (selectedRows.length == 0) {
-            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a copiar/cortar", "Atencion", JOptionPane.WARNING_MESSAGE);
-            return;
+            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a copiar/cortar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            return false;
         }
 
         organizerFiles.clear();
@@ -701,20 +710,21 @@ public class fileExplorer extends JPanel {
             File file = (File) tableModel.getValueAt(row, 0);
             organizerFiles.add(file);
         }
-        JOptionPane.showMessageDialog(this, selectedRows.length + "elemento(s) preparado (s) para organizar .", "Portapapeles", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(panelFondo, selectedRows.length + "elemento(s) preparado (s) para organizar .", "Portapapeles", JOptionPane.INFORMATION_MESSAGE);
+        return true;
     }
 
     private void pasteFilesO(File destination) {
 
         if (organizerFiles.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No se han seleccionado archivos para organizar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "No se han seleccionado archivos para organizar", "Atencion", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         File targetDir = destination; //modificar esto con el directorio obtenido
 
         if (!targetDir.isDirectory()) {
-            JOptionPane.showMessageDialog(this, "La ubicacion de destino no es una carpeta valida", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "La ubicacion de destino no es una carpeta valida", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -729,7 +739,7 @@ public class fileExplorer extends JPanel {
 
             } catch (IOException e) {
                 success = false;
-                JOptionPane.showMessageDialog(this, "Error al " + (isCutOperation ? "mover" : "copiar") + " " + sourceFile.getName() + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, "Error al " + (isCutOperation ? "mover" : "copiar") + " " + sourceFile.getName() + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
 
@@ -737,21 +747,21 @@ public class fileExplorer extends JPanel {
             organizerFiles.clear();
             displayContents(targetDir);
             updateTree(targetDir);
-            JOptionPane.showMessageDialog(this, "Elementos organizados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Elementos organizados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void pasteFiles() {
 
         if (clipboardFiles.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El portapapeles esta vacio", "Atencion", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "El portapapeles esta vacio", "Atencion", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         File targetDir = new File(currentDirPath);
 
         if (!targetDir.isDirectory()) {
-            JOptionPane.showMessageDialog(this, "La ubicacion de destino no es una carpeta valida", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "La ubicacion de destino no es una carpeta valida", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -774,7 +784,7 @@ public class fileExplorer extends JPanel {
 
             } catch (IOException e) {
                 success = false;
-                JOptionPane.showMessageDialog(this, "Error al " + (isCutOperation ? "mover" : "copiar") + " " + sourceFile.getName() + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, "Error al " + (isCutOperation ? "mover" : "copiar") + " " + sourceFile.getName() + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
 
@@ -785,7 +795,7 @@ public class fileExplorer extends JPanel {
             }
             displayContents(targetDir);
             updateTree(targetDir);
-            JOptionPane.showMessageDialog(this, "Elementos pegados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Elementos pegados con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -818,7 +828,7 @@ public class fileExplorer extends JPanel {
     private void deleteSelectedFiles() {
         int[] selectedRows = fileTable.getSelectedRows();
         if (selectedRows.length == 0) {
-            JOptionPane.showMessageDialog(this, "Selecciona los archivos o carpetas a eliminar.", "Atencion", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a eliminar.", "Atencion", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -828,7 +838,7 @@ public class fileExplorer extends JPanel {
             filesToDelete.add(file);
         }
 
-        int confirmation = JOptionPane.showConfirmDialog(this,
+        int confirmation = JOptionPane.showConfirmDialog(panelFondo,
                 "¿Esta seguro de que quiere mover " + selectedRows.length + "elemento(s) a la Papelera?",
                 "Confirmar Eliminacion",
                 JOptionPane.YES_NO_OPTION);
@@ -850,7 +860,7 @@ public class fileExplorer extends JPanel {
         for (File file : filesToDelete) {
 
             if (file.getAbsolutePath().equals(recycleBin)) {
-                JOptionPane.showMessageDialog(this, "No se puede eliminar la Papelera de Reciclaje", "Error de Eliminacion", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, "No se puede eliminar la Papelera de Reciclaje", "Error de Eliminacion", JOptionPane.ERROR_MESSAGE);
                 success = false;
                 continue;
             }
@@ -862,14 +872,14 @@ public class fileExplorer extends JPanel {
                 Files.move(file.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 success = false;
-                JOptionPane.showMessageDialog(this, "Error al mover " + file.getName() + " a la Papelera: " + e.getMessage(), "Error de eliminacion", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, "Error al mover " + file.getName() + " a la Papelera: " + e.getMessage(), "Error de eliminacion", JOptionPane.ERROR_MESSAGE);
             }
 
             if (success) {
                 File currentDir = new File(currentDirPath);
                 displayContents(currentDir);
                 updateTree(currentDir);
-                JOptionPane.showMessageDialog(this, "Elementos movidos a la Papelera con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(panelFondo, "Elementos movidos a la Papelera con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }

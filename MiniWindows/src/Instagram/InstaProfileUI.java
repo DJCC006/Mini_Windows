@@ -93,6 +93,7 @@ public class InstaProfileUI extends JPanel {
                     Window window = SwingUtilities.getWindowAncestor(InstaProfileUI.this);
                     if (window instanceof JFrame) {
                         JFrame frame = (JFrame) window;
+                        
                         frame.setContentPane(new InstaEditProfileUI(viewer));
                         frame.pack();
                         frame.setLocationRelativeTo(null);

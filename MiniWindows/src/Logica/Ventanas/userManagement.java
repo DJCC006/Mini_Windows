@@ -26,6 +26,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,15 +58,26 @@ public class userManagement extends JPanel {
     private static final String CARD_CREAR = "CrearUsuario";
     private static final String CARD_DESACTIVAR="DesactivarUsuario";
     
+    
+    private final Color COLOR_FONDO = new Color(30, 30, 30);
+    private final Color COLOR_PANEL = new Color(45, 45, 48);
+    private final Color COLOR_NARANJA = new Color(233, 84, 32);
+    private final Color COLOR_TEXTO = new Color(240, 240, 240);
+    
+    
+    
+    
     public userManagement(){
         
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(900,600));
+        this.setBackground(COLOR_FONDO);
         
         
         //parte de titulo
         JLabel titulo= new JLabel("Administrador de Usuarios", SwingConstants.CENTER);
-        titulo.setFont(new Font("Arial", Font.BOLD, 24));
+        titulo.setFont(new Font("Arial", Font.BOLD,30 ));
+        titulo.setForeground(COLOR_TEXTO);
         titulo.setBorder(BorderFactory.createEmptyBorder(15,0,15,0));
         add(titulo, BorderLayout.NORTH);
         
@@ -77,6 +90,7 @@ public class userManagement extends JPanel {
         //parte central4
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
+        cardPanel.setBackground(COLOR_FONDO);
         
         
         cardPanel.add(CARD_CREAR, createCrearUsuarioPanel());
@@ -87,84 +101,6 @@ public class userManagement extends JPanel {
         
         
         cardLayout.show(cardPanel, CARD_CREAR);
-        
-        /*
-       setSize(400,300);
-       setLayout(new BorderLayout(10,10));
-       
-       
-       JPanel cabezal = new JPanel(new FlowLayout(FlowLayout.CENTER));
-       JLabel titulo = new JLabel("Gestionar Usuarios");
-       titulo.setFont(new Font("Arial", Font.BOLD, 18));
-       cabezal.add(titulo);
-       
-       add(cabezal, BorderLayout.NORTH);
-       
-       JPanel botonesP = new JPanel();
-       botonesP.setLayout(new GridLayout(2,1,15,15));
-       
-       
-       JButton createUserButton = new JButton("Crear Nuevo Usuario");
-       createUserButton.setFont(new Font("Arial", Font.PLAIN, 14));
-       createUserButton.addActionListener(e -> {
-           String name= JOptionPane.showInputDialog(null, "Ingrese el nombre del nuevo usuario: ");
-           String pass = JOptionPane.showInputDialog(null, "Ingrese contraseña para nuevo usuario: ");
-           
-           boolean verName=false;
-           try{
-                verName=UserManager.checkUsername(name);//sesionManager.userCheck(name);
-           }catch(IOException e2){
-               System.out.println("Erorr al checar el nombre");
-           }
-           
-           boolean verPass = sesionManager.passwordCheck(pass);
-           
-           if(verName!=true && verPass!= true){
-               JOptionPane.showMessageDialog(null, "No se pudo crear nuevo usuario");
-           }else{
-               
-               try{
-                 UserManager.addUser(name, pass);
-                 JOptionPane.showMessageDialog(null, "Usuario Creado Exitosamente");
-               }catch(IOException e2){
-                   System.out.println("Erro a la hora de crear usuario extra");
-               }
-                
-               
-           
-           /*
-               User nuevoUsuario = new User(name, pass);
-               try{
-                  nuevoUsuario.createInitUserDir();
-                  nuevoUsuario.createInicialDirs();
-                  UsuariosControlador.getInstance().getUsuarios().add(nuevoUsuario);
-                  
-               }catch(IOException a){   
-               }
-
-           }
-           
-           
-           
-           System.out.println("Aqui creamos nuevo usuario");
-       });
-        
-       
-        JButton deleteUserButton = new JButton("Eliminar Usuario");
-       deleteUserButton.setFont(new Font("Arial", Font.PLAIN, 14));
-       deleteUserButton.addActionListener(e -> {
-           System.out.println("Aqui borramos usuario");
-       });
-       
-       botonesP.add(createUserButton);
-       botonesP.add(deleteUserButton);
-       
-       JPanel centro = new JPanel(new GridBagLayout());
-       centro.add(botonesP);
-       
-       add(centro, BorderLayout.CENTER);
-       setVisible(true);
-       */
     }
     
     
@@ -174,23 +110,24 @@ public class userManagement extends JPanel {
         panel.setLayout(new GridLayout(5,1,10,10));
         panel.setPreferredSize(new Dimension(200,0));
         panel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        panel.setBackground(new Color(240,240,240));
+        panel.setBackground(COLOR_FONDO);
         
-        JButton crearUserBt = new JButton("<html><b>Crear Nuevo Usuario</b></html");
+        BotonModerno crearUserBt = new BotonModerno("Crear Nuevo Usuario",COLOR_NARANJA, COLOR_TEXTO);
         crearUserBt.addActionListener(e -> {
             prepareCreatePanel();
             cardLayout.show(cardPanel, CARD_CREAR);
             System.out.println("Se proesiono el crear");
         });
         
-        JButton desactivarUserBt = new JButton("<html><b>Desactivar Usuario</b></html>");
+        BotonModerno desactivarUserBt = new BotonModerno("Eliminar Usuario", COLOR_NARANJA, COLOR_TEXTO);
         desactivarUserBt.addActionListener(e ->{
             prepareCreatePanel();
             cardLayout.show(cardPanel, CARD_DESACTIVAR);
             System.out.println("Se proesiono el desactivar");
         });
         
-   
+        
+        
         panel.add(crearUserBt);
         panel.add(desactivarUserBt);
         
@@ -230,50 +167,24 @@ public class userManagement extends JPanel {
             }
         }
     }
-    
-    /*
-    private void refreshCardPanel(String cardNom){
-        Component existingComponent = cardComponentMap.get(cardNom);
-        if(existingComponent!=null){
-            cardPanel.remove(existingComponent);
-            cardComponentMap.remove(cardNom);
-        }
-        
-        Component newComponent = null;
-        if(cardNom.equals(CARD_MOSTRAR)){
-            newComponent = createShowUsersPanel();
-        }else if(cardNom.equals(CARD_DESACTIVAR)){
-            newComponent = createDeleteUserPanel();
-        }else if(cardNom.equals(CARD_CREAR)){
-            newComponent = createCrearUsuarioPanel(); 
-        }
-        
-        
-        if(newComponent!=null){
-            addCard(cardNom, newComponent);
-        }
-        
-        
-        cardLayout.show(cardPanel, cardNom);
-        cardPanel.revalidate();
-        cardPanel.repaint();
-        this.revalidate();
-        this.repaint();
-    }
-*/
-    
+
 
     
     private JPanel createCrearUsuarioPanel(){
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(50,50,50,50));
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(COLOR_FONDO);
         
         JLabel userLabel = new JLabel("Nombre de Usuario:");
+        userLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        userLabel.setForeground(COLOR_TEXTO);
         JTextField userField = new JTextField(20);
+        
         JLabel passLabel = new JLabel("Contraseña Inicial:");
+        passLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        passLabel.setForeground(COLOR_TEXTO);
         JPasswordField passField = new JPasswordField(20);
-        JButton saveBt= new JButton("Guardar Nuevo Usuario");
+        BotonModerno saveBt= new BotonModerno("Guardar Nuevo Usuario", COLOR_NARANJA, COLOR_TEXTO);
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets= new Insets(10,10,10,10);
@@ -327,7 +238,7 @@ public class userManagement extends JPanel {
     private JPanel createDeleteUserPanel(){
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(50,50,50,50));
-        panel.setBackground(Color.LIGHT_GRAY);
+        panel.setBackground(COLOR_FONDO);
         
         
         deleteUserComboBox = new JComboBox<>(new String[]{"Cargando usuarios..."});
@@ -335,7 +246,9 @@ public class userManagement extends JPanel {
         
         
         JLabel selectLabel = new JLabel("Seleccionar Usuario a Eliminar:");
-        JButton deleteButton = new JButton("Eliminar Cuenta Permanentemente");
+        selectLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        selectLabel.setForeground(COLOR_TEXTO);
+        BotonModerno deleteButton = new BotonModerno("Eliminar Cuenta Permanentemente", COLOR_NARANJA, COLOR_TEXTO);
         
         prepareDeletePanel();
         
@@ -402,22 +315,43 @@ public class userManagement extends JPanel {
         return panel;
     }
     
-    /*
-    public static void main(String[] args) {
-        
-     
-        ArrayList<User> array = new ArrayList<>();
-        User hola = new User("hola", "holis1");
-        array.add(hola);
-        UsuariosControlador.getInstance().setUsuarios(array);
-        
-        
-        
-        JFrame frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(900,600);
-        frame.add(new userManagement());
-        frame.setVisible(true);
+   private class BotonModerno extends JButton {
+
+        private Color colorBase;
+        private Color colorHover;
+
+        public BotonModerno(String text, Color bg, Color fg) {
+            super(text);
+            this.colorBase = bg;
+            this.colorHover = bg.brighter();
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setForeground(fg);
+            setFont(new Font("Segoe UI", Font.BOLD, 12));
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    setBackground(colorHover);
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    setBackground(colorBase);
+                }
+            });
+            setBackground(colorBase);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+            super.paintComponent(g2);
+            g2.dispose();
+        }
     }
-*/
 }

@@ -130,6 +130,8 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
                 modeloLista.addElement(file.getName());
             }
         }
+        this.revalidate();
+        this.repaint();
     }
 
     public void importarMusica() {

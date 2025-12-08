@@ -18,7 +18,7 @@ import javax.swing.UIManager;
 /**
  *
  * @author David
- */
+ */ 
 public class PowerOn {
 
     public static void main(String[] args) {
@@ -30,7 +30,7 @@ public class PowerOn {
             // Ignorar si no se puede establecer; la aplicación seguirá con el L&F por defecto
         }
 
-        //Crear archivo gestor de usuarios
+        //Crear archivo gestor de usuarios  
         UserManager userManagement = new UserManager();
         User admin = null;
         //crear cuenta admin CON NUEVO METOODO

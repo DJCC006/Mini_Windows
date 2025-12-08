@@ -99,6 +99,7 @@ public class InstaLoginUI extends JPanel {
                 Window window = SwingUtilities.getWindowAncestor(InstaLoginUI.this);
                 if (window instanceof JFrame) {
                     JFrame frame = (JFrame) window;
+                    frame.setAlwaysOnTop(true);
                     frame.setContentPane(new InstaRegisterUI());
                     frame.pack();
                     frame.setLocationRelativeTo(null);
@@ -167,6 +168,7 @@ public class InstaLoginUI extends JPanel {
             Window window = SwingUtilities.getWindowAncestor(this);
             if (window instanceof JFrame) {
                 JFrame frame = (JFrame) window;
+                frame.setAlwaysOnTop(true);
                 frame.setContentPane(new InstaProfileUI(username));
                 frame.pack();
                 frame.setLocationRelativeTo(null);
@@ -185,6 +187,7 @@ public class InstaLoginUI extends JPanel {
 
         JFrame frame = new JFrame("Outstagram Login Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setAlwaysOnTop(true);
         frame.setResizable(false);
         frame.setContentPane(new InstaLoginUI());
         frame.pack();

@@ -10,13 +10,18 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -24,10 +29,14 @@ import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.Timer;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 
 /**
  *
@@ -37,6 +46,9 @@ public class Escritorio {
     
     
     genFondos panelFondo;
+    private JLabel clockLabel;
+    private SimpleDateFormat dateFormat;
+    private final Color COLOR_TEXTO = new Color(240, 240, 240);
     
     public Escritorio(){
         
@@ -48,13 +60,16 @@ public class Escritorio {
         
         
         //---NO OLVIDAR VOLVER A ACTIVAR ESTO---
-        //screen.setUndecorated(true);//limpieza inicial
-        gd.setFullScreenWindow(null); //screen
+        screen.setUndecorated(true);//limpieza inicial
+        gd.setFullScreenWindow(screen); //screen
+        screen.requestFocusInWindow();
+        //Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         
         panelFondo = new genFondos("src\\recursos\\wallpapers\\Background1.png");
         screen.setTitle("ESCRITORIO");
         screen.setResizable(false);
         screen.setSize(1920,1200);  //Tamaño standard para menus
+       // screen.setLocation(0, 0);
         screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         screen.setLocationRelativeTo(null); //cosas para tamaño personalizado
         screen.setLayout(new BorderLayout());
@@ -94,6 +109,21 @@ public class Escritorio {
         rightPanel.setOpaque(false);
         taskBarPanel.add(rightPanel,BorderLayout.EAST);
         
+        dateFormat = new SimpleDateFormat("HH:mm:ss dd/HH/yyyy", Locale.getDefault());
+        clockLabel = new JLabel(dateFormat.format(new Date()));
+        clockLabel.setForeground(COLOR_TEXTO);
+        clockLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        
+        
+        
+        
+//        JLabel userLog = new JLabel("Usuario Logeado: "+UserLogged.getInstance().getUserLogged().getName());
+//        userLog.setForeground(COLOR_TEXTO);
+//        userLog.setFont(new Font("Segoe UI", Font.BOLD, 12));
+//        rightPanel.add(userLog);
+        
+        
+        
         
         //Agregado de botones
         final int ICON_SIZE=40;
@@ -108,7 +138,9 @@ public class Escritorio {
         ImageIcon imagesIcon = scaleImage("src\\recursos\\iconos\\imagenesIcon.png", ICON_SIZE);
         ImageIcon musicIcon = scaleImage("src\\recursos\\iconos\\musicIcon.png", ICON_SIZE);
         ImageIcon instaIcon = scaleImage("src\\recursos\\iconos\\instaIcon.png", ICON_SIZE);
-        
+        ImageIcon wifiIcon = scaleImage("src\\recursos\\iconos\\wifi.png", 30);
+        ImageIcon volumeIcon = scaleImage("src\\recursos\\iconos\\vol.png", 30);
+        ImageIcon bateriaIcon = scaleImage("src\\recursos\\iconos\\bat.png", 30);
         JPopupMenu menu = new JPopupMenu();
         
         JMenuItem logoutItem= new JMenuItem("Log Out");
@@ -145,6 +177,34 @@ public class Escritorio {
         
         menu.add(logoutItem);
         
+        
+        JButton wifiButton = new JButton(wifiIcon);
+        wifiButton.setPreferredSize(new Dimension(30, 30));
+        wifiButton.setMaximumSize(new Dimension(30, 30));
+        wifiButton.setOpaque(false);
+        wifiButton.setContentAreaFilled(false);
+        wifiButton.setBorderPainted(false);
+        rightPanel.add(wifiButton);
+        
+         JButton volumeButton = new JButton(volumeIcon);
+        volumeButton.setPreferredSize(new Dimension(30, 30));
+        volumeButton.setMaximumSize(new Dimension(30, 30));
+        volumeButton.setOpaque(false);
+        volumeButton.setContentAreaFilled(false);
+        volumeButton.setBorderPainted(false);
+        rightPanel.add(volumeButton);
+        
+         JButton bateriaButton = new JButton(bateriaIcon);
+        bateriaButton.setPreferredSize(new Dimension(30, 30));
+        bateriaButton.setMaximumSize(new Dimension(30, 30));
+        bateriaButton.setOpaque(false);
+        bateriaButton.setContentAreaFilled(false);
+        bateriaButton.setBorderPainted(false);
+        rightPanel.add(bateriaButton);
+        
+        
+        rightPanel.add(clockLabel);
+        startClockUpdater();
         
         
         
@@ -354,6 +414,23 @@ public class Escritorio {
     }
     
     
+    private void startClockUpdater(){
+        
+        Timer timer = new Timer(1000, new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Date now= new Date();
+                
+                String dateTimer = dateFormat.format(now);
+                
+                clockLabel.setText(dateTimer);
+            }
+            
+        });
+        timer.start();
+    }
+    
+    
     public static void main(String[] args) {
         Escritorio ventana = new Escritorio();
     }
@@ -386,6 +463,22 @@ public class Escritorio {
         audioPlayer musicPanel = new audioPlayer();
         musicFrame.add(musicPanel, BorderLayout.CENTER);
         
+         musicFrame.addInternalFrameListener(new InternalFrameAdapter() {
+
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e) {
+                audioLogic playing = musicPanel.getPlayer();
+                if (playing.isPlaying()) {
+                    musicPanel.stopPlayback();
+                }
+
+                musicFrame.dispose();
+            }
+        });
+
+        
+        
+        
         musicFrame.setSize(650,450);
         musicFrame.setLocation(100, 100);
         musicFrame.setVisible(true);
@@ -411,7 +504,7 @@ public class Escritorio {
          fileExplorer explorerPanel = new fileExplorer(panelFondo);
          fManagerFrame.add(explorerPanel, BorderLayout.CENTER);
          
-         fManagerFrame.setSize(800,600);
+         fManagerFrame.setSize(1000,600);
          fManagerFrame.setLocation(50, 50);
          fManagerFrame.setVisible(true);
          return fManagerFrame;
@@ -445,6 +538,7 @@ public class Escritorio {
     
     private void createInstaWindow(){
         JFrame frame = new JFrame("OUTSTAGRAM");
+        frame.setAlwaysOnTop(true);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setResizable(false);
         frame.setContentPane(new InstaLoginUI());
