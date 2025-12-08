@@ -4,6 +4,7 @@
  */
 package Instagram;
 
+import Logica.Excepciones.ImageLoadException;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
@@ -382,7 +383,12 @@ public class InstaPostUI extends JLayeredPane {
         lblImagen.setVerticalAlignment(SwingConstants.CENTER);
         lblImagen.setOpaque(false);
 
-        ImageIcon icon = recortarImagenCuadrada(path, 380);
+        ImageIcon icon = null;
+        try {
+            icon = recortarImagenCuadrada(path, 380);
+        } catch (ImageLoadException ex) {
+            System.err.println("Error cargando imagen: " + ex.getMessage());
+        }
 
         if (icon != null) {
             lblImagen.setIcon(icon);
@@ -662,26 +668,33 @@ public class InstaPostUI extends JLayeredPane {
         return new ImageIcon(img);
     }
 
-    private ImageIcon recortarImagenCuadrada(String ruta, int size) {
+    private ImageIcon recortarImagenCuadrada(String ruta, int size) throws ImageLoadException {
         try {
             File f = new File(ruta);
             if (!f.exists()) {
-                return null;
+                throw new ImageLoadException("Archivo de imagen no existe: " + ruta);
             }
+
             BufferedImage original = ImageIO.read(f);
             if (original == null) {
-                return null;
+                throw new ImageLoadException("No se pudo leer la imagen (null): " + ruta);
             }
+
             int w = original.getWidth();
             int h = original.getHeight();
             int cropSize = Math.min(w, h);
             int x = (w - cropSize) / 2;
             int y = (h - cropSize) / 2;
+
             BufferedImage cropped = original.getSubimage(x, y, cropSize, cropSize);
             Image scaled = cropped.getScaledInstance(size, size, Image.SCALE_SMOOTH);
+
             return new ImageIcon(scaled);
+
+        } catch (IOException e) {
+            throw new ImageLoadException("Error leyendo la imagen: " + ruta, e);
         } catch (Exception e) {
-            return null;
+            throw new ImageLoadException("Error al procesar la imagen: " + ruta, e);
         }
     }
 

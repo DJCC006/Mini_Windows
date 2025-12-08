@@ -15,6 +15,7 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import Logica.ManejoUsuarios.UserLogged;
+import Logica.Excepciones.ImageLoadException;
 
 /**
  *
@@ -93,7 +94,7 @@ public class InstaProfileUI extends JPanel {
                     Window window = SwingUtilities.getWindowAncestor(InstaProfileUI.this);
                     if (window instanceof JFrame) {
                         JFrame frame = (JFrame) window;
-                        
+
                         frame.setContentPane(new InstaEditProfileUI(viewer));
                         frame.pack();
                         frame.setLocationRelativeTo(null);
@@ -287,7 +288,12 @@ public class InstaProfileUI extends JPanel {
                     JLabel lblImg = new JLabel();
                     lblImg.setHorizontalAlignment(SwingConstants.CENTER);
 
-                    ImageIcon icon = recortarImagenCuadrada(rutaImg, 130);
+                    ImageIcon icon = null;
+                    try {
+                        icon = recortarImagenCuadrada(rutaImg, 130);
+                    } catch (ImageLoadException ex) {
+                        System.err.println("Error cargando miniatura: " + ex.getMessage());
+                    }
                     if (icon != null) {
                         lblImg.setIcon(icon);
                     } else {
@@ -337,38 +343,33 @@ public class InstaProfileUI extends JPanel {
         gridFotos.repaint();
     }
 
-    private ImageIcon recortarImagenCuadrada(String ruta, int size) {
+    private ImageIcon recortarImagenCuadrada(String ruta, int size) throws ImageLoadException {
         try {
             File f = new File(ruta);
             if (!f.exists()) {
-                return null;
+                throw new ImageLoadException("Archivo no existe: " + ruta);
             }
             ImageIcon originalIcon = new ImageIcon(ruta);
-            if (originalIcon.getIconWidth() <= 0) {
-                return null;
+            if (originalIcon.getIconWidth() <= 0 || originalIcon.getIconHeight() <= 0) {
+                throw new ImageLoadException("Icon inválido o no se pudo cargar: " + ruta);
             }
-
             Image img = originalIcon.getImage();
-            BufferedImage buffered = new BufferedImage(
-                    originalIcon.getIconWidth(),
-                    originalIcon.getIconHeight(),
-                    BufferedImage.TYPE_INT_ARGB
-            );
+            BufferedImage buffered = new BufferedImage(originalIcon.getIconWidth(), originalIcon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
             Graphics g = buffered.getGraphics();
             g.drawImage(img, 0, 0, null);
             g.dispose();
-
             int w = buffered.getWidth();
             int h = buffered.getHeight();
             int cropSize = Math.min(w, h);
             int x = (w - cropSize) / 2;
             int y = (h - cropSize) / 2;
-
             BufferedImage cropped = buffered.getSubimage(x, y, cropSize, cropSize);
             Image scaled = cropped.getScaledInstance(size, size, Image.SCALE_SMOOTH);
             return new ImageIcon(scaled);
+        } catch (ImageLoadException e) {
+            throw e;
         } catch (Exception e) {
-            return null;
+            throw new ImageLoadException("Error procesando imagen: " + ruta, e);
         }
     }
 
@@ -579,7 +580,12 @@ public class InstaProfileUI extends JPanel {
 
             String rutaFoto = manager.getProfilePic(username);
             if (rutaFoto != null && !rutaFoto.isEmpty() && !rutaFoto.equals("futura referencia de imagen aqui")) {
-                ImageIcon icon = recortarImagenCuadrada(rutaFoto, 90);
+                ImageIcon icon = null;
+                try {
+                    icon = recortarImagenCuadrada(rutaFoto, 90);
+                } catch (ImageLoadException ex) {
+                    System.err.println("Error cargando foto de perfil: " + ex.getMessage());
+                }
                 if (icon != null) {
                     lblFoto.setIcon(icon);
                     lblFoto.setText("");
@@ -587,6 +593,7 @@ public class InstaProfileUI extends JPanel {
                     lblFoto.setIcon(null);
                     lblFoto.setText("Sin Rostro");
                 }
+
             } else {
                 lblFoto.setIcon(null);
                 lblFoto.setText("Sin Rostro");

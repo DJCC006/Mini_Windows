@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package Instagram;
 
 import java.awt.*;
@@ -10,7 +14,12 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
+import Logica.Excepciones.ImageLoadException;
 
+/**
+ *
+ * @author esteb
+ */
 public class VisibilidadProfileUI extends JPanel {
 
     private final String profileUser;
@@ -205,7 +214,12 @@ public class VisibilidadProfileUI extends JPanel {
                     JLabel lblImg = new JLabel();
                     lblImg.setHorizontalAlignment(SwingConstants.CENTER);
 
-                    ImageIcon icon = recortarImagenCuadrada(rutaImg, 130);
+                    ImageIcon icon = null;
+                    try {
+                        icon = recortarImagenCuadrada(rutaImg, 130);
+                    } catch (ImageLoadException ex) {
+                        System.err.println("Error cargando miniatura: " + ex.getMessage());
+                    }
                     if (icon != null) {
                         lblImg.setIcon(icon);
                     } else {
@@ -255,15 +269,15 @@ public class VisibilidadProfileUI extends JPanel {
         gridFotos.repaint();
     }
 
-    private ImageIcon recortarImagenCuadrada(String ruta, int size) {
+    private ImageIcon recortarImagenCuadrada(String ruta, int size) throws ImageLoadException {
         try {
             File f = new File(ruta);
             if (!f.exists()) {
-                return null;
+                throw new ImageLoadException("Archivo no existe: " + ruta);
             }
             BufferedImage original = ImageIO.read(f);
             if (original == null) {
-                return null;
+                throw new ImageLoadException("No se pudo leer la imagen: " + ruta);
             }
             int w = original.getWidth();
             int h = original.getHeight();
@@ -273,8 +287,12 @@ public class VisibilidadProfileUI extends JPanel {
             BufferedImage cropped = original.getSubimage(x, y, cropSize, cropSize);
             Image scaled = cropped.getScaledInstance(size, size, Image.SCALE_SMOOTH);
             return new ImageIcon(scaled);
+        } catch (IOException e) {
+            throw new ImageLoadException("Error I/O al leer imagen: " + ruta, e);
+        } catch (ImageLoadException e) {
+            throw e;
         } catch (Exception e) {
-            return null;
+            throw new ImageLoadException("Error procesando imagen: " + ruta, e);
         }
     }
 
@@ -287,7 +305,12 @@ public class VisibilidadProfileUI extends JPanel {
 
             String rutaFoto = manager.getProfilePic(profileUser);
             if (rutaFoto != null && !rutaFoto.isEmpty() && !rutaFoto.equals("futura referencia de imagen aqui")) {
-                ImageIcon icon = recortarImagenCuadrada(rutaFoto, 90);
+                ImageIcon icon = null;
+                try {
+                    icon = recortarImagenCuadrada(rutaFoto, 90);
+                } catch (ImageLoadException ex) {
+                    System.err.println("Error cargando foto de perfil: " + ex.getMessage());
+                }
                 if (icon != null) {
                     lblFoto.setIcon(icon);
                     lblFoto.setText("");
@@ -295,6 +318,7 @@ public class VisibilidadProfileUI extends JPanel {
                     lblFoto.setIcon(null);
                     lblFoto.setText("Sin Rostro");
                 }
+
             } else {
                 lblFoto.setIcon(null);
                 lblFoto.setText("Sin Rostro");

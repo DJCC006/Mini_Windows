@@ -4,6 +4,7 @@
  */
 package Instagram;
 
+import Logica.Excepciones.InvalidDataException;
 import Logica.Ventanas.genFondos;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -180,7 +181,9 @@ public class InstaRegisterUI extends JPanel {
 
         final File userRoot = new File(usersRoot, osUser);
         final File imagesFolder = new File(userRoot, "Mis Imagenes");
-        if (!imagesFolder.exists()) imagesFolder.mkdirs();
+        if (!imagesFolder.exists()) {
+            imagesFolder.mkdirs();
+        }
 
         final String usersRootCanonical = safeCanonical(usersRoot);
         final String userRootCanonical = safeCanonical(userRoot);
@@ -235,10 +238,14 @@ public class InstaRegisterUI extends JPanel {
                 "jpg", "png", "jpeg", "gif", "bmp", "webp"));
 
         int res = fileChooser.showOpenDialog(this);
-        if (res != JFileChooser.APPROVE_OPTION) return;
+        if (res != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
 
         File sel = fileChooser.getSelectedFile();
-        if (sel == null) return;
+        if (sel == null) {
+            return;
+        }
 
         try {
             String selCan = sel.getCanonicalPath();
@@ -293,44 +300,33 @@ public class InstaRegisterUI extends JPanel {
         String edadStr = txtEdad.getText().trim();
         char genero = cbGenero.getSelectedItem().toString().charAt(0);
 
-        if (nombre.isEmpty() || username.isEmpty() || password.isEmpty() || edadStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "¡El vacío no es aceptable! Llena todo.", "Error Fatal",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int edad;
         try {
-            edad = Integer.parseInt(edadStr);
-            if (edad < 13) {
-                JOptionPane.showMessageDialog(this,
-                        "Eres muy joven para la oscuridad (Min 13).",
-                        "Edad Inválida", JOptionPane.WARNING_MESSAGE);
-                return;
+            if (nombre.isEmpty() || username.isEmpty() || password.isEmpty() || edadStr.isEmpty()) {
+                throw new InvalidDataException("Todos los campos deben estar llenos.");
             }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this,
-                    "La edad debe ser un número.", "Error",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
 
-        try {
+            int edad;
+            try {
+                edad = Integer.parseInt(edadStr);
+            } catch (NumberFormatException e) {
+                throw new InvalidDataException("La edad debe ser un número.", e);
+            }
+
+            if (edad < 13) {
+                throw new InvalidDataException("Debes tener al menos 13 años para unirte.");
+            }
+
             instaManager manager = instaController.getInstance().getInsta();
 
             if (manager.checkUserExistance(username)) {
-                JOptionPane.showMessageDialog(this,
-                        "Ese alias ya fue reclamado.", "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
+                throw new InvalidDataException("Ese alias ya está en uso. Elige otro.");
             }
 
-            manager.addNewUser(nombre, genero, username, password, edad,
-                    rutaFotoSeleccionada);
+            manager.addNewUser(nombre, genero, username, password, edad, rutaFotoSeleccionada);
 
             JOptionPane.showMessageDialog(this,
-                    "¡Bienvenido a la legión!", "Éxito",
+                    "¡Bienvenido a la legión!",
+                    "Éxito",
                     JOptionPane.INFORMATION_MESSAGE);
 
             txtNombre.setText("");
@@ -346,14 +342,22 @@ public class InstaRegisterUI extends JPanel {
                     System.currentTimeMillis(),
                     0, 0, 0, 1, false));
 
+        } catch (InvalidDataException ex) {
+            JOptionPane.showMessageDialog(this,
+                    ex.getMessage(),
+                    "Datos Inválidos",
+                    JOptionPane.WARNING_MESSAGE);
+
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
-                    "Error: " + ex.getMessage(),
-                    "Error Crítico", JOptionPane.ERROR_MESSAGE);
+                    "Error interno: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private class DarkComboBoxUI extends BasicComboBoxUI {
+
         @Override
         protected JButton createArrowButton() {
             JButton btn = new JButton();
@@ -380,8 +384,15 @@ public class InstaRegisterUI extends JPanel {
                     g2.dispose();
                 }
 
-                @Override public int getIconWidth() { return 20; }
-                @Override public int getIconHeight() { return 20; }
+                @Override
+                public int getIconWidth() {
+                    return 20;
+                }
+
+                @Override
+                public int getIconHeight() {
+                    return 20;
+                }
             });
 
             return btn;
@@ -422,10 +433,14 @@ public class InstaRegisterUI extends JPanel {
 
             addMouseListener(new MouseAdapter() {
                 @Override
-                public void mouseEntered(MouseEvent e) { setBackground(COLOR_BTN_HOVER); }
+                public void mouseEntered(MouseEvent e) {
+                    setBackground(COLOR_BTN_HOVER);
+                }
 
                 @Override
-                public void mouseExited(MouseEvent e) { setBackground(COLOR_BTN); }
+                public void mouseExited(MouseEvent e) {
+                    setBackground(COLOR_BTN);
+                }
             });
         }
 
