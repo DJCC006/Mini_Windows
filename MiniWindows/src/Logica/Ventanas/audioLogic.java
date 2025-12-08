@@ -31,6 +31,7 @@ public class audioLogic {
     private File currentSong;
     //private Player player;
      Clip audioClip;
+     public String playingSongName;
     private long totalDurationMillis =0;
     private long currentPositionMillis =0;
     private long currentPositionFrame=0;
@@ -48,9 +49,16 @@ public class audioLogic {
     }
     
     public audioLogic(ProgressUpdateListener listener){
+        playingSongName=null;
         this.listener=listener;
         progressTimer = new Timer(100, e-> updateProgress());
     }
+    
+    
+    public ProgressUpdateListener getListener(){
+        return listener;
+    }
+    
     
     public void load(File song){
         stop();
@@ -141,70 +149,12 @@ public class audioLogic {
         }
         currentPositionFrame=0;
         
-        
-        
-        /*
-        try(AudioInputStream audioStream = AudioSystem.getAudioInputStream(song)){
-            
-            //obtener el formadio de audio y la duracion
-
-            AudioFormat format = audioStream.getFormat();
-            
-            if(format.getEncoding() != AudioFormat.Encoding.PCM_SIGNED){
-                AudioFormat decodedFormat = new AudioFormat(
-                        AudioFormat.Encoding.PCM_SIGNED,
-                        format.getSampleRate(),
-                        16,
-                        format.getChannels(),
-                        format.getChannels()*2,
-                        format.getSampleRate(),
-                        false
-                );
-                
-                decodedStream =
-            }
-            
-            
-            
-            
-            
-            long frames = audioStream.getFrameLength();
-            
-            totalDurationMillis = (long) (frames/format.getFrameRate()*1000);
-            
-            //obtener el clip y abrirlo
-            audioClip= AudioSystem.getClip();
-            audioClip.open(audioStream);
-            
-            
-            //anadir el listener para detectar el final de la reproduccion
-            audioClip.addLineListener(event ->{
-                if(event.getType() == LineEvent.Type.STOP && !audioClip.isRunning()){
-                    
-                    //Solo si no estamos pausando y la reproduccion realmente termino
-                    if(audioClip.getFramePosition()>=audioClip.getFrameLength()-1){
-                        progressTimer.stop();
-                        audioClip.setFramePosition(0);
-                        currentPositionFrame=0;
-                        listener.onPlaybackFinished();
-                        System.out.println("Reproduccion finalizada");
-                    }
-                }
-            });
-            
-        }catch(UnsupportedAudioFileException | LineUnavailableException | IOException e){
-            JOptionPane.showMessageDialog(null, "Error al cargar el audio");
-            e.printStackTrace();
-            audioClip=null;
-        }
-        currentPositionFrame=0;
-        */
-        
 
     }
     
     
     public void play(){
+        
         
         if(audioClip == null) return;
         

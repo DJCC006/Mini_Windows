@@ -36,9 +36,10 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
    private audioLogic player;
    private JLabel timeLabel;
    private JButton playPauseButton;
-    
+    private String nowPlaying;
     
     public audioPlayer(){
+        this.nowPlaying=null;
         this.setLayout(new BorderLayout(5,5));
         this.player= new audioLogic(this);
         this.modeloLista = new DefaultListModel<>();
@@ -187,11 +188,13 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
             player.pause();
             playPauseButton.setText("PLAY");
         }else{
-            if(cancionesList.getSelectedValue()== null && modeloLista.getSize()>0){
+            if(cancionesList.getSelectedValue()== null && modeloLista.getSize()>0 && nowPlaying.equals(null)){
                 cancionesList.setSelectedIndex(0);
             }
             if(player.audioClip!= null){
                 player.play();
+                nowPlaying = player.audioClip.toString();
+                System.out.println(nowPlaying);
                 playPauseButton.setText("PAUSE");
             }else if(cancionesList.getSelectedValue()!=null){
                 File songFile = new File(myMusicFolder, cancionesList.getSelectedValue());
@@ -201,28 +204,34 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
             }
         }
         
+    }
+    
+    public void playExterno(File song){
+        nowPlaying=song.getName();
+        System.out.println(nowPlaying);
         
-        /*
-        if(button.getText().contains("PLAY")){
-            //player.play();
-            button.setText("PAUSE");
+        
+        if(player.isPlaying()){
+            player.pause();
+            playPauseButton.setText("PLAY");
         }else{
-           // player.pause();
-            button.setText("PLAY");
+            
+            if(player.audioClip!= null){
+                player.play();
+                playPauseButton.setText("PAUSE");
+            }
         }
-*/
     }
     
     
     
-    private void stopPlayback(){
+    
+    public void stopPlayback(){
        // player.stop();
        player.stop();
         //progressSlider.setValue(0);
         System.out.println("Se detuvo la reproduccion");
         playPauseButton.setText("PLAY");
-        
-       
     }
     
     
@@ -281,5 +290,13 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
     }
     
     
+    public void setPlayerExterno(audioLogic externo){
+        player=externo;
+    }
     
+    
+    
+    public audioLogic getPlayer(){
+        return player;
+    }
 }

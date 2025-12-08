@@ -114,4 +114,27 @@ public class ImagenesLogic {
             }
         }
     }
+    
+    
+    
+    public void ImportarImagenesExterno(Component parentComponent, File sourcefile){
+        File dirDestino = new File(myImagesFolder);
+        int importedCount = 0;
+        
+         try {
+            File destination = new File(dirDestino, sourcefile.getName());
+            Files.copy(sourcefile.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            importedCount++;
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(parentComponent, 
+                "Error al importar " + sourcefile.getName() + ": " + e.getMessage(), 
+                "Error de Importación", JOptionPane.ERROR_MESSAGE);
+        }
+        
+         cargarImagenes();
+         
+    }
+    
+    
+    
 }

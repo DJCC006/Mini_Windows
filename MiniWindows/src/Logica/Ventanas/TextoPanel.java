@@ -38,7 +38,7 @@ import javax.swing.text.StyledDocument;
  */
 public class TextoPanel extends JPanel {
 
-    private JTextPane textPane;
+    private  JTextPane textPane;
     private JComboBox<String> fontCombo;
     private JComboBox<Integer> sizeCombo;
     private JButton btnColor;
@@ -156,4 +156,12 @@ public class TextoPanel extends JPanel {
         }
         textPane.requestFocusInWindow();
     }
+    
+    
+    
+    public JTextPane getTextPane(){
+        return textPane;
+    }
+            
+    
 }

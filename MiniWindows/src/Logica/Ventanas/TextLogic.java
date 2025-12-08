@@ -92,6 +92,21 @@ public class TextLogic {
         }
     }
     
+    
+    
+    public void abrirExterno(Component parent, JTextPane textPane, File file){
+         try {
+                textPane.setText("");
+                
+                FileReader reader = new FileReader(file);
+                textPane.read(reader, file);
+                
+                archivoActual = file;
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(parent, "Error al abrir: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+    }
+    
     public File getArchivoActual() {
         return archivoActual;
     }

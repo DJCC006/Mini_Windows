@@ -32,6 +32,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.filechooser.FileSystemView;
@@ -737,27 +739,54 @@ public class fileExplorer extends JPanel{
 
         //Checkar si es tipo para musica
         if(nameFile.toLowerCase().endsWith(".wav") || nameFile.toLowerCase().endsWith(".mp3")){
-            JInternalFrame newImages= createMusicWindow();
+             audioPlayer musicPanel = new audioPlayer();
+            JInternalFrame newImages= createMusicWindow(musicPanel);
+            audioLogic logicPlayer = new audioLogic(musicPanel);
+            musicPanel.setPlayerExterno(logicPlayer);
             panelFondo.add(newImages);
              try{
                  newImages.setSelected(true);
+                 logicPlayer.load(file);
+                 
+                 musicPanel.playExterno(file);
              }catch(java.beans.PropertyVetoException ex){
                  //ignore
              }
 
-        }
-
-
-
-        if(nameFile.toLowerCase().endsWith(".png") || nameFile.toLowerCase().endsWith(".jpg")){
-            JInternalFrame newImages= createGalleryWindow();
+        }else if(nameFile.toLowerCase().endsWith(".png") || nameFile.toLowerCase().endsWith(".jpg")){
+            VisorImagenes galeriapanel = new VisorImagenes();
+            JInternalFrame newImages= createGalleryWindow(galeriapanel);
+            ImagenesLogic logicImag = new ImagenesLogic();
             panelFondo.add(newImages);
              try{
+                 logicImag.ImportarImagenesExterno(galeriapanel, file);
                  newImages.setSelected(true);
              }catch(java.beans.PropertyVetoException ex){
                  //ignore
              }
+        } else if(nameFile.toLowerCase().endsWith(".txt")){
+            TextLogic logictxt = new TextLogic(); 
+             TextoPanel textEditPanel = new TextoPanel();
+             JTextPane txtpane = textEditPanel.getTextPane();
+            JInternalFrame newText = createTextWindow(textEditPanel);
+            panelFondo.add(newText);
+            try{
+                newText.setSelected(true);
+                logictxt.abrirExterno(textEditPanel, txtpane, file);
+            }catch(java.beans.PropertyVetoException ex2){
+                
+            }
+        } else{
+            JOptionPane.showMessageDialog(null, "Extension de archivo no soportada por sistema", "Aviso", JOptionPane.INFORMATION_MESSAGE);
         }
+
+
+
+        
+        
+        
+        
+        
             
     }
     
@@ -1436,21 +1465,41 @@ public class fileExplorer extends JPanel{
     
     
     //METODOS PARA EJECUTADORES
-     private JInternalFrame createMusicWindow(){
+     private JInternalFrame createMusicWindow(audioPlayer player){
         JInternalFrame musicFrame = new JInternalFrame("MUSIC INSANO", true, true, true, true);
-        audioPlayer musicPanel = new audioPlayer();
-        musicFrame.add(musicPanel, BorderLayout.CENTER);
+        musicFrame.add(player, BorderLayout.CENTER);
+        
+        
+        musicFrame.addInternalFrameListener(new InternalFrameAdapter(){
+            
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e){
+                audioLogic playing = player.getPlayer();
+                if(playing.isPlaying()){
+                    player.stopPlayback();
+                }
+                
+                musicFrame.dispose();
+            }
+        });
+        
+        
+        
         
         musicFrame.setSize(650,450);
         musicFrame.setLocation(100, 100);
         musicFrame.setVisible(true);
+        
+        
+  
+        
+        
         return musicFrame;
     }
     
     
-     private JInternalFrame createGalleryWindow(){
+     private JInternalFrame createGalleryWindow(VisorImagenes galeriapanel){
         JInternalFrame galleryFrame = new JInternalFrame("GALERIA INSANA", true, true, true, true);
-        VisorImagenes galeriapanel = new VisorImagenes();
         galleryFrame.add(galeriapanel, BorderLayout.CENTER);
         
         galleryFrame.setSize(900,600);
@@ -1460,7 +1509,16 @@ public class fileExplorer extends JPanel{
     }
      
      
-     
+   private JInternalFrame createTextWindow(TextoPanel panel){
+         JInternalFrame fManagerFrame = new JInternalFrame("EDITOR DE TEXTO INSANO", true, true, true, true);
+         fManagerFrame.add(panel, BorderLayout.CENTER);
+         
+         fManagerFrame.setSize(900,600);
+         fManagerFrame.setLocation(50, 50);
+         fManagerFrame.setVisible(true);
+         return fManagerFrame;
+    }
+    
      
     /*
     
