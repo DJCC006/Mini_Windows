@@ -34,6 +34,7 @@ public class InstaEditProfileUI extends JPanel {
 
     private JTextField txtEntrar;
     private JButton btnToggleCuenta;
+    private JButton btnQuickToggle;
 
     public InstaEditProfileUI(String currentUser) {
         this.currentUser = currentUser;
@@ -53,6 +54,8 @@ public class InstaEditProfileUI extends JPanel {
 
         add(panelCentral, BorderLayout.CENTER);
         add(crearBarraInferior(), BorderLayout.SOUTH);
+
+        SwingUtilities.invokeLater(this::actualizarEstadoCuenta);
     }
 
     private JPanel crearHeader() {
@@ -76,10 +79,25 @@ public class InstaEditProfileUI extends JPanel {
         JLabel title = new JLabel("Alterar Realidad");
         title.setFont(FONT_TITLE);
         title.setForeground(COLOR_TEXT);
-        title.setBounds(50, 10, 300, 40);
+        title.setBounds(50, 12, 180, 30);
         p.add(title);
 
+        btnQuickToggle = new JButton("Desactivar");
+        btnQuickToggle.setBounds(240, 12, 130, 30);
+        estilizarBotonPequenoHeader(btnQuickToggle);
+        btnQuickToggle.addActionListener(e -> toggleCuenta());
+        p.add(btnQuickToggle);
+
         return p;
+    }
+
+    private void estilizarBotonPequenoHeader(JButton btn) {
+        btn.setBackground(new Color(30, 30, 30));
+        btn.setForeground(COLOR_BTN);
+        btn.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private JPanel crearPanelBuscar() {
@@ -179,10 +197,10 @@ public class InstaEditProfileUI extends JPanel {
         btnToggleCuenta.addActionListener(e -> toggleCuenta());
         p.add(btnToggleCuenta);
 
-        JLabel lblInfo = new JLabel("<html><div style='width:320px;color:lightgray'>" +
-                "Desactivar ocultará tu cuenta de búsquedas y hará que otros no vean tus comentarios. " +
-                "Si la cuenta está desactivada, este botón la reactivará automáticamente." +
-                "</div></html>");
+        JLabel lblInfo = new JLabel("<html><div style='width:320px;color:lightgray'>"
+                + "Desactivar ocultará tu cuenta de búsquedas y hará que otros no vean tus comentarios. "
+                + "Si la cuenta está desactivada, este botón la reactivará automáticamente."
+                + "</div></html>");
         lblInfo.setBounds(40, 140, 320, 80);
         lblInfo.setForeground(Color.LIGHT_GRAY);
         lblInfo.setFont(FONT_CAOS);
@@ -205,13 +223,23 @@ public class InstaEditProfileUI extends JPanel {
         return bar;
     }
 
-
     private void ejecutarBusqueda() {
-        String q = txtBuscar.getText().trim();
+        String q = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim();
+
+        if (q.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Ingresa texto para buscar (no dejes el campo vacío).",
+                    "Búsqueda vacía",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         listModel.clear();
         try {
             instaManager manager = instaController.getInstance().getInsta();
-            if (manager == null) return;
+            if (manager == null) {
+                return;
+            }
 
             ArrayList<String> res = manager.searchUsers(q);
             if (res == null || res.isEmpty()) {
@@ -220,7 +248,9 @@ public class InstaEditProfileUI extends JPanel {
             }
 
             for (String u : res) {
-                if (u.equalsIgnoreCase(currentUser)) continue;
+                if (u.equalsIgnoreCase(currentUser)) {
+                    continue;
+                }
 
                 manager.setLoggedUser(currentUser);
                 boolean sigo = manager.isFollowing(u);
@@ -240,7 +270,9 @@ public class InstaEditProfileUI extends JPanel {
     private void abrirPerfilExternoconRetroceso(String username) {
         try {
             instaManager manager = instaController.getInstance().getInsta();
-            if (manager == null) return;
+            if (manager == null) {
+                return;
+            }
 
             if (!manager.checkUserExistance(username)) {
                 JOptionPane.showMessageDialog(this, "Ese usuario no existe o está desactivado.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -248,7 +280,9 @@ public class InstaEditProfileUI extends JPanel {
             }
 
             Window window = SwingUtilities.getWindowAncestor(this);
-            if (!(window instanceof JFrame)) return;
+            if (!(window instanceof JFrame)) {
+                return;
+            }
             JFrame frame = (JFrame) window;
 
             VisibilidadProfileUI vp = new VisibilidadProfileUI(username, currentUser);
@@ -263,26 +297,64 @@ public class InstaEditProfileUI extends JPanel {
         }
     }
 
+    private void actualizarEstadoCuenta() {
+        try {
+            instaManager manager = instaController.getInstance().getInsta();
+            if (manager == null) {
+                return;
+            }
+            boolean estado = manager.getStatusUser(currentUser);
+            if (btnToggleCuenta != null) {
+                btnToggleCuenta.setText(estado ? "Desactivar cuenta" : "Reactivar cuenta");
+            }
+            if (btnQuickToggle != null) {
+                btnQuickToggle.setText(estado ? "Desactivar" : "Reactivar");
+            }
+        } catch (IOException ex) {
+            if (btnToggleCuenta != null) {
+                btnToggleCuenta.setText("Desactivar / Activar cuenta");
+            }
+            if (btnQuickToggle != null) {
+                btnQuickToggle.setText("Desactivar");
+            }
+        }
+    }
+
     private void toggleCuenta() {
         try {
             instaManager manager = instaController.getInstance().getInsta();
-            if (manager == null) return;
+            if (manager == null) {
+                return;
+            }
 
             boolean estado = manager.getStatusUser(currentUser);
+
             if (estado) {
-                int resp = JOptionPane.showConfirmDialog(this, "¿Deseas desactivar tu cuenta? (se ocultará de búsquedas)", "Confirmar", JOptionPane.YES_NO_OPTION);
+                int resp = JOptionPane.showConfirmDialog(this,
+                        "¿Deseas desactivar tu cuenta? (se ocultará de búsquedas y comentarios)",
+                        "Confirmar desactivación",
+                        JOptionPane.YES_NO_OPTION);
                 if (resp == JOptionPane.YES_OPTION) {
-                    manager.desactivateUser(currentUser);
-                    JOptionPane.showMessageDialog(this, "Cuenta desactivada.");
+                    boolean ok = manager.desactivateUser(currentUser);
+                    if (ok) {
+                        JOptionPane.showMessageDialog(this, "Cuenta desactivada.");
+                    } else {
+                        JOptionPane.showMessageDialog(this, "No se pudo desactivar la cuenta.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    return;
                 }
             } else {
                 boolean ok = manager.activateUser(currentUser);
                 if (ok) {
                     JOptionPane.showMessageDialog(this, "Cuenta reactivada.");
                 } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo activar la cuenta.");
+                    JOptionPane.showMessageDialog(this, "No se pudo reactivar la cuenta.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
+
+            actualizarEstadoCuenta();
+
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Error en operación de cuenta: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -292,7 +364,7 @@ public class InstaEditProfileUI extends JPanel {
         Window window = SwingUtilities.getWindowAncestor(this);
         if (window instanceof JFrame) {
             JFrame frame = (JFrame) window;
-            frame.setContentPane(new InstaProfileUI(currentUser)); // vuelve al perfil propio
+            frame.setContentPane(new InstaProfileUI(currentUser));
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.revalidate();

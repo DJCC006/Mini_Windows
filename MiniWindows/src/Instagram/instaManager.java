@@ -486,9 +486,17 @@ public class instaManager {
     }
 
     public ArrayList<String[]> getPosts(String username) throws IOException {
+        ArrayList<String[]> posts = new ArrayList<>();
+        try {
+            if (!getStatusUser(username)) {
+                return posts;
+            }
+        } catch (IOException e) {
+            return posts;
+        }
+
         File userPath = new File(usersDir, username);
         File fileOriginal = new File(userPath, "insta.ins");
-        ArrayList<String[]> posts = new ArrayList<>();
         if (!fileOriginal.exists()) {
             return posts;
         }
@@ -502,6 +510,7 @@ public class instaManager {
                 post[3] = raf.readUTF();
                 posts.add(post);
             }
+        } catch (IOException ex) {
         }
         Collections.reverse(posts);
         return posts;
@@ -551,6 +560,13 @@ public class instaManager {
                 String author = raf.readUTF();
                 String text = raf.readUTF();
                 long date = raf.readLong();
+                try {
+                    if (!getStatusUser(author)) {
+                        continue;
+                    }
+                } catch (IOException ioe) {
+                    continue;
+                }
                 if (path.equals(imagePath)) {
                     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
                     String dateS = sdf.format(new Date(date));
@@ -569,7 +585,7 @@ public class instaManager {
         String lowQ = query.toLowerCase();
         users.seek(0);
         while (users.getFilePointer() < users.length()) {
-            users.readUTF(); // real name
+            users.readUTF();
             users.readChar();
             String uname = users.readUTF();
             users.readUTF();
@@ -654,6 +670,15 @@ public class instaManager {
         Set<String> seen = new HashSet<>();
 
         for (File udir : usersFolders) {
+            String owner = udir.getName();
+            try {
+                if (!getStatusUser(owner)) {
+                    continue;
+                }
+            } catch (IOException ioe) {
+                continue;
+            }
+
             File insta = new File(udir, "insta.ins");
             if (!insta.exists()) {
                 continue;
@@ -673,6 +698,7 @@ public class instaManager {
                         }
                     }
                 }
+            } catch (IOException ex) {
             }
         }
         Collections.reverse(res);
@@ -694,6 +720,15 @@ public class instaManager {
 
         Set<String> seen = new HashSet<>();
         for (File udir : usersFolders) {
+            String owner = udir.getName();
+            try {
+                if (!getStatusUser(owner)) {
+                    continue;
+                }
+            } catch (IOException ioe) {
+                continue;
+            }
+
             File insta = new File(udir, "insta.ins");
             if (!insta.exists()) {
                 continue;
@@ -708,7 +743,7 @@ public class instaManager {
                     if (contenido != null) {
                         String low = contenido.toLowerCase();
                         if (low.contains(needle) || low.contains("#" + tag.toLowerCase())) {
-                            String key = imag + "|" + autor + "|" + fecha;
+                            String key = imag + "|" + autor + "|" + fecha + "|" + owner;
                             if (!seen.contains(key)) {
                                 seen.add(key);
                                 res.add(new String[]{imag, autor, fecha, contenido});
@@ -716,6 +751,7 @@ public class instaManager {
                         }
                     }
                 }
+            } catch (IOException ex) {
             }
         }
         Collections.reverse(res);
@@ -739,9 +775,17 @@ public class instaManager {
         }
 
         for (File udir : userDirs) {
-            File postsFile = new File(udir, "insta.ins");
             String owner = udir.getName();
 
+            try {
+                if (!getStatusUser(owner)) {
+                    continue;
+                }
+            } catch (IOException ioe) {
+                continue;
+            }
+
+            File postsFile = new File(udir, "insta.ins");
             if (postsFile.exists()) {
                 try (RandomAccessFile raf = new RandomAccessFile(postsFile, "r")) {
                     raf.seek(0);
@@ -768,7 +812,6 @@ public class instaManager {
                         }
                     }
                 } catch (IOException ex) {
-
                 }
             }
 
@@ -781,6 +824,14 @@ public class instaManager {
                         String commentAuthor = raf.readUTF();
                         String commentText = raf.readUTF();
                         long ts = raf.readLong();
+
+                        try {
+                            if (!getStatusUser(commentAuthor)) {
+                                continue;
+                            }
+                        } catch (IOException ioe) {
+                            continue;
+                        }
 
                         String lowerComment = commentText != null ? commentText.toLowerCase() : "";
                         if (lowerComment.contains(needle)) {
@@ -843,6 +894,14 @@ public class instaManager {
         for (File udir : userDirs) {
             String owner = udir.getName();
 
+            try {
+                if (!getStatusUser(owner)) {
+                    continue;
+                }
+            } catch (IOException ioe) {
+                continue;
+            }
+
             File postsFile = new File(udir, "insta.ins");
             if (postsFile.exists()) {
                 try (RandomAccessFile raf = new RandomAccessFile(postsFile, "r")) {
@@ -882,6 +941,14 @@ public class instaManager {
                         String commentAuthor = raf.readUTF();
                         String commentText = raf.readUTF();
                         long ts = raf.readLong();
+
+                        try {
+                            if (!getStatusUser(commentAuthor)) {
+                                continue;
+                            }
+                        } catch (IOException ioe) {
+                            continue;
+                        }
 
                         String lowerComment = commentText != null ? commentText.toLowerCase() : "";
                         if (lowerComment.contains(needleHash) || containsHashtagVariant(lowerComment, keyTag)) {
