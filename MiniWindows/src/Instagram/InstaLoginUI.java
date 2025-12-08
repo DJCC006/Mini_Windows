@@ -1,7 +1,7 @@
 /*
 * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
 * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
-*/
+ */
 package Instagram;
 
 import java.awt.*;
@@ -140,20 +140,38 @@ public class InstaLoginUI extends JPanel {
             String storedPass = manager.getPassword(username);
 
             if (storedPass == null) {
-                JOptionPane.showMessageDialog(this, "Ese usuario no existe en este universo.", "Login Fallido", JOptionPane.ERROR_MESSAGE);
-            } else {
-                if (storedPass.equals(password)) {
+                JOptionPane.showMessageDialog(this,
+                        "Ese usuario no existe en este universo.",
+                        "Usuario no encontrado",
+                        JOptionPane.ERROR_MESSAGE);
+                txtUser.requestFocusInWindow();
+                return;
+            }
 
-                    Window window = SwingUtilities.getWindowAncestor(this);
-                    if (window instanceof JFrame) {
-                        JFrame frame = (JFrame) window;
-                        frame.setContentPane(new InstaProfileUI(username));
-                        frame.pack();
-                        frame.setLocationRelativeTo(null);
-                        frame.revalidate();
-                        frame.repaint();
-                    }
-                }
+            if (!storedPass.equals(password)) {
+                JOptionPane.showMessageDialog(this,
+                        "Contraseña incorrecta.",
+                        "Login Fallido",
+                        JOptionPane.ERROR_MESSAGE);
+                txtPass.setText("");
+                txtPass.requestFocusInWindow();
+                return;
+            }
+
+            try {
+                manager.setLoggedUser(username);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Advertencia: no se pudo fijar sesión: " + ex.getMessage());
+            }
+
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window instanceof JFrame) {
+                JFrame frame = (JFrame) window;
+                frame.setContentPane(new InstaProfileUI(username));
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.revalidate();
+                frame.repaint();
             }
 
         } catch (IOException ex) {

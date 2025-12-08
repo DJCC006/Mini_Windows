@@ -354,7 +354,7 @@ public class VisibilidadProfileUI extends JPanel {
         bar.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, COLOR_BTN));
         bar.setPreferredSize(new Dimension(400, 60));
 
-        JButton btnInicio = crearBotonNav("Inicio", "🏠");
+        JButton btnInicio = crearBotonNav("Interacciones", "❤️");
         btnInicio.setForeground(COLOR_BTN);
         btnInicio.addActionListener(e -> {
             Window window = SwingUtilities.getWindowAncestor(this);
@@ -388,28 +388,146 @@ public class VisibilidadProfileUI extends JPanel {
         btnSubir.setForeground(COLOR_BTN);
         btnSubir.addActionListener(e -> {
             try {
-                instaManager manager = instaController.getInstance().getInsta();
-                manager.setLoggedUser(viewer);
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setDialogTitle("Selecciona la evidencia");
-                fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Imágenes", "jpg", "png", "jpeg"));
+                String osUser = null;
+                try {
+                    if (Logica.ManejoUsuarios.UserLogged.getInstance().getUserLogged() != null) {
+                        osUser = Logica.ManejoUsuarios.UserLogged.getInstance().getUserLogged().getName();
+                    }
+                } catch (Exception ex) {
+                    osUser = null;
+                }
+                final String targetUser = (osUser != null && !osUser.trim().isEmpty()) ? osUser : viewer;
+
+                final File usersRoot = new File("src\\Z\\Usuarios");
+                final File userRoot = new File(usersRoot, targetUser);
+                final File imagesFolder = new File(userRoot, "Mis Imagenes");
+                if (!imagesFolder.exists()) {
+                    imagesFolder.mkdirs();
+                }
+
+                final String usersRootCanonical = safeCanonical(usersRoot);
+                final String userRootCanonical = safeCanonical(userRoot);
+
+                JFileChooser fileChooser = new JFileChooser(imagesFolder) {
+                    @Override
+                    public void approveSelection() {
+                        File sel = getSelectedFile();
+                        if (sel != null) {
+                            try {
+                                String selCan = sel.getCanonicalPath();
+                                if (selCan.startsWith(usersRootCanonical) && !selCan.startsWith(userRootCanonical)) {
+                                    JOptionPane.showMessageDialog(this,
+                                            "Acceso denegado: no puedes seleccionar archivos dentro de la carpeta de otro usuario.",
+                                            "Acceso Denegado",
+                                            JOptionPane.WARNING_MESSAGE);
+                                    return;
+                                }
+                            } catch (IOException ex) {
+                                JOptionPane.showMessageDialog(this,
+                                        "Error verificando la ruta seleccionada.",
+                                        "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+                        }
+                        super.approveSelection();
+                    }
+
+                    @Override
+                    public void setCurrentDirectory(File dir) {
+                        if (dir != null) {
+                            try {
+                                String dirCan = dir.getCanonicalPath();
+                                if (dirCan.startsWith(usersRootCanonical) && !dirCan.startsWith(userRootCanonical)) {
+                                    super.setCurrentDirectory(imagesFolder);
+                                    return;
+                                }
+                            } catch (IOException ex) {
+                                super.setCurrentDirectory(imagesFolder);
+                                return;
+                            }
+                        }
+                        super.setCurrentDirectory(dir);
+                    }
+                };
+
+                fileChooser.setDialogTitle("Selecciona la evidencia (no puedes acceder a carpetas de otros usuarios)");
+                fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Imágenes", "jpg", "png", "jpeg", "gif", "bmp", "webp"));
+
+                fileChooser.addPropertyChangeListener(evt -> {
+                    if (JFileChooser.DIRECTORY_CHANGED_PROPERTY.equals(evt.getPropertyName())) {
+                        Object newVal = evt.getNewValue();
+                        if (newVal instanceof File) {
+                            File newDir = (File) newVal;
+                            try {
+                                String newCan = newDir.getCanonicalPath();
+                                if (newCan.startsWith(usersRootCanonical) && !newCan.startsWith(userRootCanonical)) {
+                                    SwingUtilities.invokeLater(() -> {
+                                        fileChooser.setCurrentDirectory(imagesFolder);
+                                        JOptionPane.showMessageDialog(this,
+                                                "No puedes acceder a carpetas de otros usuarios.",
+                                                "Acceso Denegado",
+                                                JOptionPane.WARNING_MESSAGE);
+                                    });
+                                }
+                            } catch (IOException ex) {
+                                SwingUtilities.invokeLater(() -> fileChooser.setCurrentDirectory(imagesFolder));
+                            }
+                        }
+                    }
+                });
+
                 int result = fileChooser.showOpenDialog(this);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     File selectedFile = fileChooser.getSelectedFile();
+
+                    try {
+                        String selCan = selectedFile.getCanonicalPath();
+                        if (selCan.startsWith(usersRootCanonical) && !selCan.startsWith(userRootCanonical)) {
+                            JOptionPane.showMessageDialog(this,
+                                    "Acceso denegado: no puedes seleccionar archivos dentro de la carpeta de otro usuario.",
+                                    "Acceso Denegado",
+                                    JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(this, "Error verificando la ruta seleccionada.", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
                     String path = selectedFile.getAbsolutePath();
                     String caption = JOptionPane.showInputDialog(this, "Escribe una descripción:", "Nuevo Post", JOptionPane.PLAIN_MESSAGE);
                     if (caption == null) {
                         caption = "";
                     }
-                    manager.addPost(path, viewer, caption);
-                    JOptionPane.showMessageDialog(this, "Subido con éxito.");
-                    cargarDatosPerfil();
-                    cargarPostsEnGrid();
+
+                    try {
+                        if (!imagesFolder.exists()) {
+                            imagesFolder.mkdirs();
+                        }
+                        String uniqueName = System.currentTimeMillis() + "_" + selectedFile.getName();
+                        File destFile = new File(imagesFolder, uniqueName);
+
+                        if (!selectedFile.getCanonicalPath().equals(destFile.getCanonicalPath())) {
+                            java.nio.file.Files.copy(selectedFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        }
+
+                        instaManager manager = instaController.getInstance().getInsta();
+                        manager.setLoggedUser(viewer);
+                        manager.addPost(destFile.getAbsolutePath(), viewer, caption);
+
+                        JOptionPane.showMessageDialog(this, "Subido con éxito.");
+                        cargarDatosPerfil();
+                        cargarPostsEnGrid();
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(this, "Error al subir: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al subir: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error al abrir selector: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+
         bar.add(btnSubir);
 
         JButton btnPerfil = crearBotonNav("Perfil", "👤");
@@ -428,6 +546,14 @@ public class VisibilidadProfileUI extends JPanel {
         bar.add(btnPerfil);
 
         return bar;
+    }
+
+    private String safeCanonical(File f) {
+        try {
+            return f.getCanonicalPath();
+        } catch (IOException ex) {
+            return f.getAbsolutePath();
+        }
     }
 
     private JButton crearBotonNav(String texto, String emoji) {

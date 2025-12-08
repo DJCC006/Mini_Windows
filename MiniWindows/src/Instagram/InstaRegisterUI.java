@@ -169,18 +169,131 @@ public class InstaRegisterUI extends JPanel {
     }
 
     private void seleccionarFoto() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Seleccionar Evidencia");
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes (JPG, PNG)", "jpg", "png", "jpeg"));
+        final File usersRoot = new File("src\\Z\\Usuarios");
 
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            rutaFotoSeleccionada = file.getAbsolutePath();
+        String typedUsername = txtUsername.getText().trim();
+        final String targetUsername = (typedUsername.isEmpty()) ? "" : typedUsername;
 
-            ImageIcon icon = new ImageIcon(rutaFotoSeleccionada);
-            Image img = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-            lblFotoPreview.setIcon(new ImageIcon(img));
-            lblFotoPreview.setText("");
+        final File startDir = (targetUsername.isEmpty())
+                ? usersRoot
+                : new File(usersRoot, targetUsername + File.separator + "Mis Imagenes");
+
+        if (!startDir.exists()) {
+        }
+
+        final String usersRootCanonical = safeCanonical(usersRoot);
+        final String userRootCanonical = targetUsername.isEmpty() ? null : safeCanonical(new File(usersRoot, targetUsername));
+
+        JFileChooser fileChooser = new JFileChooser(startDir.exists() ? startDir : usersRoot) {
+            @Override
+            public void approveSelection() {
+                File sel = getSelectedFile();
+                if (sel != null) {
+                    try {
+                        String selCan = sel.getCanonicalPath();
+
+                        if (selCan.startsWith(usersRootCanonical)) {
+                            if (userRootCanonical != null && !selCan.startsWith(userRootCanonical)) {
+                                JOptionPane.showMessageDialog(this,
+                                        "Acceso denegado: no puedes seleccionar imágenes de la carpeta de otro usuario.",
+                                        "Acceso Denegado",
+                                        JOptionPane.WARNING_MESSAGE);
+                                return;
+                            }
+                        }
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(this,
+                                "Error verificando la ruta seleccionada.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+                super.approveSelection();
+            }
+
+            @Override
+            public void setCurrentDirectory(File dir) {
+                if (dir != null) {
+                    try {
+                        String dirCan = dir.getCanonicalPath();
+                        if (dirCan.startsWith(usersRootCanonical)) {
+                            if (userRootCanonical != null && !dirCan.startsWith(userRootCanonical)) {
+                                super.setCurrentDirectory(usersRoot);
+                                return;
+                            }
+                        }
+                    } catch (IOException ex) {
+                    }
+                }
+                super.setCurrentDirectory(dir);
+            }
+        };
+
+        fileChooser.setDialogTitle("Seleccionar Evidencia (no puedes elegir imágenes de otros usuarios)");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes (JPG, PNG, JPEG, GIF, BMP, WEBP)", "jpg", "png", "jpeg", "gif", "bmp", "webp"));
+
+        int res = fileChooser.showOpenDialog(this);
+        if (res == JFileChooser.APPROVE_OPTION) {
+            File sel = fileChooser.getSelectedFile();
+            if (sel == null) {
+                return;
+            }
+
+            try {
+                String selCan = sel.getCanonicalPath();
+
+                if (selCan.startsWith(usersRootCanonical)) {
+                    if (userRootCanonical != null && !selCan.startsWith(userRootCanonical)) {
+                        JOptionPane.showMessageDialog(this,
+                                "Acceso denegado: no puedes seleccionar imágenes de la carpeta de otro usuario.",
+                                "Acceso Denegado",
+                                JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                }
+
+                String finalUsername = targetUsername;
+                if (finalUsername.isEmpty()) {
+
+                    finalUsername = JOptionPane.showInputDialog(this, "Ingresa el alias donde guardar la imagen:", "Alias del Usuario", JOptionPane.PLAIN_MESSAGE);
+                    if (finalUsername == null || finalUsername.trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "Debes especificar un alias para guardar la imagen.", "Operación cancelada", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    finalUsername = finalUsername.trim();
+                    txtUsername.setText(finalUsername);
+                }
+                File userDir = new File(usersRoot, finalUsername);
+                File misImgs = new File(userDir, "Mis Imagenes");
+                if (!misImgs.exists()) {
+                    misImgs.mkdirs();
+                }
+
+                String uniqueName = System.currentTimeMillis() + "_" + sel.getName();
+                File dest = new File(misImgs, uniqueName);
+
+                if (!sel.getCanonicalPath().equals(dest.getCanonicalPath())) {
+                    java.nio.file.Files.copy(sel.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                rutaFotoSeleccionada = dest.getAbsolutePath();
+                ImageIcon icon = new ImageIcon(rutaFotoSeleccionada);
+                Image img = icon.getImage().getScaledInstance(lblFotoPreview.getWidth(), lblFotoPreview.getHeight(), Image.SCALE_SMOOTH);
+                lblFotoPreview.setIcon(new ImageIcon(img));
+                lblFotoPreview.setText("");
+
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error al procesar la imagen: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private String safeCanonical(File f) {
+        try {
+            return f.getCanonicalPath();
+        } catch (IOException ex) {
+            return f.getAbsolutePath();
         }
     }
 
