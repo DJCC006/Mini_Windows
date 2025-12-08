@@ -27,8 +27,8 @@ public class audioPlayer extends JPanel implements audioLogic.ProgressUpdateList
     private DefaultListModel<String> modeloLista;
     private JList<String> cancionesList;
     private JSlider progressSlider;
-    private static String actualUserName = UserLogged.getInstance().getUserLogged().getName();
-    private static final String myMusicFolder = "src\\Z\\Usuarios\\" + actualUserName + "\\Musica";
+    private  String actualUserName = UserLogged.getInstance().getUserLogged().getName();
+    private String myMusicFolder = "src\\Z\\Usuarios\\" + actualUserName + "\\Musica";
 
     private audioLogic player;
     private JLabel timeLabel;

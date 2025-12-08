@@ -216,7 +216,7 @@ public class userManagement extends JPanel {
            boolean verPass = sesionManager.passwordCheck(password);
            
            if(verName!=true && verPass!= true){
-               JOptionPane.showMessageDialog(null, "No se pudo crear nuevo usuario");
+               JOptionPane.showMessageDialog(this, "No se pudo crear nuevo usuario");
            }else{
                
                try{
@@ -224,7 +224,7 @@ public class userManagement extends JPanel {
                  User nUsuario = new User(name, password);
                  UsuariosControlador.getInstance().getUsuarios().add(nUsuario);//agrego en controlador
                  
-                 JOptionPane.showMessageDialog(null, "Usuario Creado Exitosamente");
+                 JOptionPane.showMessageDialog(this, "Usuario Creado Exitosamente");
                }catch(IOException e2){
                    System.out.println("Erro a la hora de crear usuario extra");
                }
@@ -297,15 +297,10 @@ public class userManagement extends JPanel {
                     UserManager.changeStatus(usuarioSelec, false);
                     
                     //eliminamos archivos fisicos
-                    UserManager.borrarFilesUser(usuarioSelec);
-                }catch(IOException e2){}
-                
-                
-                
-                
-                
-                
-                
+                    if(UserManager.borrarFilesUser(usuarioSelec)){
+                        JOptionPane.showMessageDialog(this, "Se ha eliminado el usuario exitosamente");
+                    }
+                }catch(IOException e2){JOptionPane.showMessageDialog(this, "Error para eliminar usuario");}
                 
                 prepareDeletePanel();
                 this.revalidate();
