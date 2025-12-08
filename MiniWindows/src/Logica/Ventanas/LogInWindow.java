@@ -16,8 +16,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 
 /**
@@ -87,6 +89,30 @@ public class LogInWindow  extends sesionManager{
         nameUser.setFont(new Font("Arial", Font.BOLD, 45));
         nameUser.setForeground(Color.WHITE);
         nameUser.setBounds(600, 310, 500, 200);
+        
+        //Botones de pop
+        JPopupMenu popupmenu= new JPopupMenu();
+        
+        JMenuItem apagarItem = new JMenuItem("Apagar");
+        
+        apagarItem.addActionListener(e -> {
+            JOptionPane.showMessageDialog(screen, "Apagando sistema...", "Apagando",JOptionPane.INFORMATION_MESSAGE);
+            screen.dispose();
+        });
+        
+        popupmenu.add(apagarItem);
+        
+        JButton opcionesButton = new JButton("Opciones");
+        
+        opcionesButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
+            }
+            
+        });
+        
+        
         
         screen.add(nameUser);
         screen.add(labelUser);
