@@ -4,8 +4,6 @@
  */
 package Logica.Ventanas;
 
-import Logica.ManejoUsuarios.User;
-import Logica.ManejoUsuarios.UserLogged;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -16,8 +14,8 @@ import java.io.File;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
@@ -26,46 +24,54 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class VisorImagenes extends JPanel {
 
     private final ImagenesLogic logic;
-
     private int indiceActual = -1;
 
+    private final Color COLOR_FONDO = new Color(30, 30, 30);      
+    private final Color COLOR_PANEL = new Color(45, 45, 48);      
+    private final Color COLOR_NARANJA = new Color(233, 84, 32);   
+    private final Color COLOR_TEXTO = new Color(240, 240, 240);   
+
     private final PanelImagen panelImagenGrande = new PanelImagen();
-    private final JPanel panelMiniaturas = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 6));
+    private final JPanel panelMiniaturas = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
     private final JLabel lblEstado = new JLabel("Sin imagen");
 
     public VisorImagenes() {
         this.logic = new ImagenesLogic();
         logic.cargarImagenes();
 
-        setLayout(new BorderLayout(8, 8));
+        setLayout(new BorderLayout(0, 0));
+        setBackground(COLOR_FONDO);
+
         crearBarraSuperior();
 
         add(panelImagenGrande, BorderLayout.CENTER);
 
         crearPanelInferior();
-        setPreferredSize(new Dimension(900, 600));
+
+        setPreferredSize(new Dimension(1000, 700));
 
         if (!logic.getImagenes().isEmpty()) {
             indiceActual = 0;
             reconstruirMiniaturas();
             mostrarImagenActual();
         }
-        
     }
 
     private void crearBarraSuperior() {
         JPanel top = new JPanel(new BorderLayout());
-        top.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        top.setBackground(COLOR_PANEL);
+        top.setBorder(new EmptyBorder(10, 20, 10, 20));
 
-        JLabel titulo = new JLabel("Galería HD Pro");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 14f));
+        JLabel titulo = new JLabel("Galería Dark");
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        titulo.setForeground(COLOR_TEXTO);
         top.add(titulo, BorderLayout.WEST);
 
-        JButton btnCargar = new JButton("Importar Imagen");
+        BotonModerno btnCargar = new BotonModerno("Importar Imagen", COLOR_NARANJA, Color.WHITE);
+        btnCargar.setPreferredSize(new Dimension(150, 35));
 
         btnCargar.addActionListener(e -> {
             logic.importarImagenes(this);
-
             if (!logic.getImagenes().isEmpty()) {
                 indiceActual = logic.getImagenes().size() - 1;
                 reconstruirMiniaturas();
@@ -78,63 +84,66 @@ public class VisorImagenes extends JPanel {
     }
 
     private void crearPanelInferior() {
-        JPanel bottomWrapper = new JPanel(new BorderLayout());
-        bottomWrapper.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        JPanel contenedorInferior = new JPanel(new BorderLayout());
+        contenedorInferior.setBackground(COLOR_FONDO);
+        contenedorInferior.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        JButton btnIzq = new JButton("◀");
-        JButton btnDer = new JButton("▶");
-        btnIzq.setPreferredSize(new Dimension(48, 80));
-        btnDer.setPreferredSize(new Dimension(48, 80));
+        BotonFlecha btnIzq = new BotonFlecha(false, COLOR_NARANJA); 
+        BotonFlecha btnDer = new BotonFlecha(true, COLOR_NARANJA);
+        
+        btnIzq.setPreferredSize(new Dimension(60, 100)); 
+        btnDer.setPreferredSize(new Dimension(60, 100));
 
         btnIzq.addActionListener(e -> mostrarAnterior());
         btnDer.addActionListener(e -> mostrarSiguiente());
 
-        bottomWrapper.add(btnIzq, BorderLayout.WEST);
-        bottomWrapper.add(btnDer, BorderLayout.EAST);
+        contenedorInferior.add(btnIzq, BorderLayout.WEST);
+        contenedorInferior.add(btnDer, BorderLayout.EAST);
 
-        panelMiniaturas.setBackground(new Color(245, 245, 245));
-
+        panelMiniaturas.setBackground(COLOR_FONDO); 
+        
         JScrollPane scrollThumbs = new JScrollPane(panelMiniaturas,
                 JScrollPane.VERTICAL_SCROLLBAR_NEVER,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollThumbs.setPreferredSize(new Dimension(720, 110));
-        scrollThumbs.setBorder(BorderFactory.createEmptyBorder());
-        scrollThumbs.getHorizontalScrollBar().setUnitIncrement(16);
+        
+        scrollThumbs.setBorder(null); 
+        scrollThumbs.getViewport().setBackground(COLOR_FONDO);
+        scrollThumbs.getHorizontalScrollBar().setUnitIncrement(20);
+        scrollThumbs.setPreferredSize(new Dimension(0, 120));
 
-        bottomWrapper.add(scrollThumbs, BorderLayout.CENTER);
+        contenedorInferior.add(scrollThumbs, BorderLayout.CENTER);
 
-        lblEstado.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-        JPanel estadoPanel = new JPanel(new BorderLayout());
-        estadoPanel.add(lblEstado, BorderLayout.WEST);
+        JPanel panelEstado = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelEstado.setBackground(COLOR_PANEL);
+        
+        lblEstado.setForeground(new Color(180, 180, 180));
+        lblEstado.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        panelEstado.add(lblEstado);
 
-        JPanel inferior = new JPanel(new BorderLayout(4, 4));
-        inferior.add(bottomWrapper, BorderLayout.CENTER);
-        inferior.add(estadoPanel, BorderLayout.SOUTH);
+        JPanel surFinal = new JPanel(new BorderLayout());
+        surFinal.add(contenedorInferior, BorderLayout.CENTER);
+        surFinal.add(panelEstado, BorderLayout.SOUTH);
 
-        add(inferior, BorderLayout.SOUTH);
+        add(surFinal, BorderLayout.SOUTH);
     }
 
     private void reconstruirMiniaturas() {
         List<File> imagenes = logic.getImagenes();
-
         panelMiniaturas.removeAll();
 
-        // Creamos los bordes que usaremos
-        LineBorder bordeSeleccion = new LineBorder(new Color(255, 204, 51), 4);
-        LineBorder bordeNormal = new LineBorder(Color.GRAY, 1);
+        LineBorder bordeSeleccion = new LineBorder(COLOR_NARANJA, 3);
+        LineBorder bordeNormal = new LineBorder(new Color(80, 80, 80), 1);
 
         for (int i = 0; i < imagenes.size(); i++) {
             final int idx = i;
             File f = imagenes.get(i);
 
-            // Creamos el panel de miniatura
             PanelMiniatura panelThumb = new PanelMiniatura();
-            panelThumb.setPreferredSize(new Dimension(100, 80));
+            panelThumb.setPreferredSize(new Dimension(120, 90));
             panelThumb.setBorder(idx == indiceActual ? bordeSeleccion : bordeNormal);
             panelThumb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-            // Cargamos la imagen
-            BufferedImage img = cargarImagenOptimizada(f, 150);
+            BufferedImage img = cargarImagenOptimizada(f, 200);
             panelThumb.setImagen(img);
 
             panelThumb.addMouseListener(new MouseAdapter() {
@@ -144,6 +153,14 @@ public class VisorImagenes extends JPanel {
                     actualizarBordesMiniaturas();
                     mostrarImagenActual();
                 }
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    if (idx != indiceActual) panelThumb.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    if (idx != indiceActual) panelThumb.setBorder(bordeNormal);
+                }
             });
 
             panelMiniaturas.add(panelThumb);
@@ -151,19 +168,12 @@ public class VisorImagenes extends JPanel {
 
         panelMiniaturas.revalidate();
         panelMiniaturas.repaint();
-
-        SwingUtilities.invokeLater(() -> {
-            if (panelMiniaturas.getParent() instanceof JViewport) {
-                JScrollPane scroll = (JScrollPane) panelMiniaturas.getParent().getParent();
-                scroll.getHorizontalScrollBar().setValue(scroll.getHorizontalScrollBar().getMaximum());
-            }
-        });
     }
 
     private void actualizarBordesMiniaturas() {
         Component[] comps = panelMiniaturas.getComponents();
-        LineBorder bordeSeleccion = new LineBorder(new Color(255, 204, 51), 4);
-        LineBorder bordeNormal = new LineBorder(Color.GRAY, 1);
+        LineBorder bordeSeleccion = new LineBorder(COLOR_NARANJA, 3);
+        LineBorder bordeNormal = new LineBorder(new Color(80, 80, 80), 1);
 
         for (int i = 0; i < comps.length; i++) {
             if (comps[i] instanceof JPanel) {
@@ -174,9 +184,7 @@ public class VisorImagenes extends JPanel {
 
     private void mostrarAnterior() {
         List<File> imagenes = logic.getImagenes();
-        if (imagenes.isEmpty()) {
-            return;
-        }
+        if (imagenes.isEmpty()) return;
         indiceActual = (indiceActual - 1 + imagenes.size()) % imagenes.size();
         actualizarBordesMiniaturas();
         mostrarImagenActual();
@@ -184,9 +192,7 @@ public class VisorImagenes extends JPanel {
 
     private void mostrarSiguiente() {
         List<File> imagenes = logic.getImagenes();
-        if (imagenes.isEmpty()) {
-            return;
-        }
+        if (imagenes.isEmpty()) return;
         indiceActual = (indiceActual + 1) % imagenes.size();
         actualizarBordesMiniaturas();
         mostrarImagenActual();
@@ -201,59 +207,147 @@ public class VisorImagenes extends JPanel {
         }
 
         File f = imagenes.get(indiceActual);
-
         try {
             BufferedImage rawImage = ImageIO.read(f);
             panelImagenGrande.setImagen(rawImage);
-            lblEstado.setText((indiceActual + 1) + "/" + imagenes.size() + " — " + f.getName());
+            lblEstado.setText(" " + (indiceActual + 1) + " / " + imagenes.size() + " — " + f.getName());
         } catch (Exception ex) {
             panelImagenGrande.setImagen(null);
-            lblEstado.setText("Error al cargar la imagen.");
+            lblEstado.setText(" Error al leer archivo.");
         }
     }
 
-    // Método auxiliar para cargar imágenes sin saturar la RAM
     private BufferedImage cargarImagenOptimizada(File f, int tamanoMax) {
         try {
             BufferedImage original = ImageIO.read(f);
-            if (original == null) {
-                return null;
-            }
-
+            if (original == null) return null;
             int w = original.getWidth();
             int h = original.getHeight();
-
             if (w > tamanoMax || h > tamanoMax) {
                 double scale = Math.min((double) tamanoMax / w, (double) tamanoMax / h);
                 int nw = (int) (w * scale);
                 int nh = (int) (h * scale);
-
                 BufferedImage resized = new BufferedImage(nw, nh, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g2 = resized.createGraphics();
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
                 g2.drawImage(original, 0, 0, nw, nh, null);
                 g2.dispose();
                 return resized;
             }
             return original;
-        } catch (Exception e) {
-            return null;
+        } catch (Exception e) { return null; }
+    }
+
+    private class BotonModerno extends JButton {
+        private final Color colorBase;
+        private final Color colorHover;
+
+        public BotonModerno(String text, Color bg, Color fg) {
+            super(text);
+            this.colorBase = bg;
+            this.colorHover = bg.brighter();
+            
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            
+            setForeground(fg);
+            setFont(new Font("Segoe UI", Font.BOLD, 14));
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    setBackground(colorHover);
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    setBackground(colorBase);
+                }
+            });
+            setBackground(colorBase);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+            
+            super.paintComponent(g2);
+            g2.dispose();
         }
     }
 
-    /**
-     * CLASE 1: Panel para la imagen GRANDE (Dinámico)
-     */
-    private class PanelImagen extends JPanel {
+    private class BotonFlecha extends JButton {
+        private final boolean esDerecha;
+        private final Color colorBase;
+        private final Color colorHover;
+        private boolean isHover = false;
 
+        public BotonFlecha(boolean esDerecha, Color bg) {
+            this.esDerecha = esDerecha;
+            this.colorBase = bg;
+            this.colorHover = bg.brighter();
+            
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    isHover = true;
+                    repaint();
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    isHover = false;
+                    repaint();
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(isHover ? colorHover : colorBase);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+
+            g2.setColor(Color.WHITE);
+            int w = getWidth();
+            int h = getHeight();
+            int size = Math.min(w, h) / 4; 
+
+            Polygon t = new Polygon();
+            if (esDerecha) {
+                t.addPoint(w/2 - size/2, h/2 - size);
+                t.addPoint(w/2 + size/2, h/2);
+                t.addPoint(w/2 - size/2, h/2 + size);
+            } else { 
+                t.addPoint(w/2 + size/2, h/2 - size);
+                t.addPoint(w/2 - size/2, h/2);
+                t.addPoint(w/2 + size/2, h/2 + size);
+            }
+            g2.fillPolygon(t);
+            g2.dispose();
+        }
+    }
+
+    private class PanelImagen extends JPanel {
         private BufferedImage imagenActual;
 
         public PanelImagen() {
-            setBackground(new Color(30, 30, 30));
+            setBackground(COLOR_FONDO);
             addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
-                    repaint();
+                    repaint(); 
                 }
             });
         }
@@ -266,43 +360,28 @@ public class VisorImagenes extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (imagenActual == null) {
-                return;
-            }
+            if (imagenActual == null) return;
             dibujarImagenCentrada((Graphics2D) g, imagenActual, getWidth(), getHeight());
         }
     }
 
-    /**
-     * CLASE 2: Panel para las MINIATURAS
-     */
     private class PanelMiniatura extends JPanel {
-
         private BufferedImage imagenThumb;
-
         public PanelMiniatura() {
-            setBackground(Color.WHITE);
-            setOpaque(true);
+            setBackground(new Color(50, 50, 50));
         }
-
         public void setImagen(BufferedImage img) {
             this.imagenThumb = img;
             repaint();
         }
-
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (imagenThumb == null) {
-                return;
-            }
-            dibujarImagenCentrada((Graphics2D) g, imagenThumb, getWidth(), getHeight());
+            if (imagenThumb != null)
+                dibujarImagenCentrada((Graphics2D) g, imagenThumb, getWidth(), getHeight());
         }
     }
 
-    /**
-     * LÓGICA DE DIBUJADO COMPARTIDA
-     */
     private void dibujarImagenCentrada(Graphics2D g2, BufferedImage img, int panelW, int panelH) {
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -321,50 +400,4 @@ public class VisorImagenes extends JPanel {
 
         g2.drawImage(img, x, y, drawW, drawH, null);
     }
-
-    // --- MAIN PARA PRUEBA ---
-    /*
-    public static void main(String[] args) {
-        // 1. Configurar un usuario de prueba para evitar NullPointerException en ImagenesLogic
-        // Esto simula que ya se pasó por la ventana de LogIn.
-        String testUserName = "TEST_USER";
-        File testUserDir = new File("src" + File.separator + "Z" + File.separator + "Usuarios" + File.separator + testUserName);
-        File testImagesDir = new File(testUserDir, "Mis Imagenes");
-
-        // Creamos la estructura si no existe (similar a UserUtilities.createInitUserDir/createInicialDirs)
-        if (!testImagesDir.exists()) {
-            System.out.println("Creando directorios de prueba: " + testImagesDir.getAbsolutePath());
-            testImagesDir.mkdirs();
-        }
-
-        // Asignamos el usuario de prueba al Singleton UserLogged
-        User testUser = new User(testUserName, "pass"); // Asumiendo que User extiende UserUtilities
-        UserLogged.getInstance().setUserLogged(testUser);
-
-        SwingUtilities.invokeLater(() -> {
-            try {
-                // Opcional: Establecer Look and Feel del sistema para mejor apariencia
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                /* Ignorar 
-            }
-
-            JFrame f = new JFrame("Galería");
-            f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-            // Instanciamos y agregamos tu panel
-            f.getContentPane().add(new VisorImagenes());
-
-            f.pack();
-            f.setLocationRelativeTo(null);
-            f.setVisible(true);
-
-            System.out.println("\n*** PRUEBA INICIADA ***");
-            System.out.println("Puedes importar imágenes a la carpeta:");
-            System.out.println(testImagesDir.getAbsolutePath());
-        });
-    }
-    */
-
-
 }

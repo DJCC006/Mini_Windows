@@ -67,8 +67,7 @@ public class CMDPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(area);
         this.add(scroll, BorderLayout.CENTER);
 
-        appendText("Microsoft Windows [Versión 10.0.22621.521]\n");
-        appendText("(c) Microsoft Corporation. Todos los derechos reservados.\n\n");
+        printDuckLogo();
 
         writePrompt();
 
@@ -154,6 +153,7 @@ public class CMDPanel extends JPanel {
                     appendText("EXIT       Sale del programa CMD.EXE.\n");
                     appendText("TIME       Muestra la hora del sistema.\n");
                     appendText("DATE       Muestra la fecha.\n");
+                    appendText("CD..       Retroceder Carpetas.\n");
                     break;
 
                 case "cd":
@@ -222,8 +222,7 @@ public class CMDPanel extends JPanel {
 
                 case "cls":
                     area.setText("");
-                    appendText("Microsoft Windows [Versión 10.0.22621.521]\n");
-                    appendText("(c) Microsoft Corporation. Todos los derechos reservados.\n\n");
+                    printDuckLogo();
                     return;
 
                 case "exit":
@@ -256,5 +255,26 @@ public class CMDPanel extends JPanel {
         
         sb.append(" Directorio de " + pathStr + "\n\n");
         return sb.toString();
+    }
+    
+    private void printDuckLogo() {
+        appendText("\n");
+        appendText("           ,~~.\n");
+        appendText("          (  6 )-_,     \n");
+        appendText("     (\\___ )=='-'      \n");
+        appendText("      \\ .   ) )         \n");
+        appendText("       \\ `-' /          \n");
+        appendText("        `---'           \n");
+        
+        appendText("  ____             _     ___  ____  \n");
+        appendText(" |  _ \\ _   _  ___| | __/ _ \\/ ___| \n");
+        appendText(" | | | | | | |/ __| |/ / | | \\___ \\ \n");
+        appendText(" | |_| | |_| | (__|   <| |_| |___) |\n");
+        appendText(" |____/ \\__,_|\\___|_|\\_\\\\___/|____/ \n");
+        
+        appendText("\n");
+        appendText("      CORPORATION (c) 2025\n");
+        appendText("   --------------------------\n");
+        appendText("   Quack Protocol: ENABLED\n");
     }
 }
