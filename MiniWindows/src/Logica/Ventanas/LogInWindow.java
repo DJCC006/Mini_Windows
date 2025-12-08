@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.ImageIcon;
@@ -102,22 +103,30 @@ public class LogInWindow  extends sesionManager{
         
         popupmenu.add(apagarItem);
         
-        JButton opcionesButton = new JButton("Opciones");
+        
+        
+        ImageIcon settingsIcon = scaleImage("src\\recursos\\iconos\\settings.png", 60);
+        JButton opcionesButton = new JButton(settingsIcon);
+        opcionesButton.setOpaque(false);
+        opcionesButton.setContentAreaFilled(false);
+        opcionesButton.setBorderPainted(false);
         
         opcionesButton.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+                popupmenu.show(opcionesButton, 0, -popupmenu.getPreferredSize().height);
             }
             
         });
         
+        opcionesButton.setBounds(20, 890, 60, 60);
         
         
         screen.add(nameUser);
         screen.add(labelUser);
         screen.add(nameField);
         screen.add(psswordfield);
+        screen.add(opcionesButton);
         screen.setVisible(true);
     }
     
@@ -147,6 +156,15 @@ public class LogInWindow  extends sesionManager{
                   
         }
 */
+    }
+    
+    
+    
+     private ImageIcon scaleImage(String rutaImagen, int ICON_SIZE){
+        ImageIcon menuIcon = new ImageIcon(rutaImagen);
+        Image originalImage = menuIcon.getImage();
+        Image scalatedImage = originalImage.getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
+        return new ImageIcon(scalatedImage);
     }
             
     

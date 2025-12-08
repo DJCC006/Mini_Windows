@@ -681,7 +681,7 @@ public class fileExplorer extends JPanel {
     private void copySelectedFiles(boolean isCut) {
         int[] selectedRows = fileTable.getSelectedRows();
         if (selectedRows.length == 0) {
-            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a copiar/cortar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a copiar", "Atencion", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -700,7 +700,7 @@ public class fileExplorer extends JPanel {
     private boolean copySelectedFilesO() {
         int[] selectedRows = fileTable.getSelectedRows();
         if (selectedRows.length == 0) {
-            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a copiar/cortar", "Atencion", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(panelFondo, "Selecciona los archivos o carpetas a copiar", "Atencion", JOptionPane.WARNING_MESSAGE);
             return false;
         }
 
